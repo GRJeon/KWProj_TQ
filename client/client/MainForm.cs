@@ -848,14 +848,17 @@ namespace client
         private void p3_dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             string rName = p3_dataGridView1.Rows[e.RowIndex].Cells[0].Value.ToString();
-            roomname = rName;
-            if (rName != string.Empty)
+
+            if(e.ColumnIndex == p3_dgv_btn.Index)
             {
-                client.RequestRoomJoin(rName);   // 서버에 방 이름 정보 보냄
-                //panel3_roomList.Invoke(new MethodInvoker(delegate { panel3_roomList.Visible = false; }));
-                //panel4_player_waitRoom.Invoke(new MethodInvoker(delegate { panel4_player_waitRoom.Visible = true; }));
-                //client.RequestRoomCreate(roomName, "5");
-                PlayerWait();
+                if (rName != string.Empty)
+                {
+                    client.RequestRoomJoin(rName);   // 서버에 방 이름 정보 보냄
+                                                     //panel3_roomList.Invoke(new MethodInvoker(delegate { panel3_roomList.Visible = false; }));
+                                                     //panel4_player_waitRoom.Invoke(new MethodInvoker(delegate { panel4_player_waitRoom.Visible = true; }));
+                                                     //client.RequestRoomCreate(roomName, "5");
+                    PlayerWait();
+                }
             }
         }
 
@@ -2095,11 +2098,7 @@ namespace client
             if (sucess == true)
             {
                 client.RequestFirendsList();
-                ShowMessageBox("삭제", "1", MessageBoxButtons.OK, MessageBoxIcon.None);
-            }
-            else
-            {
-                ShowMessageBox("삭제노노", "1", MessageBoxButtons.OK, MessageBoxIcon.None);
+                ShowMessageBox("친구가 삭제되었습니다.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
