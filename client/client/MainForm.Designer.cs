@@ -1059,7 +1059,6 @@
             this.p4_readyDone_btn.ThemeAuthor = "Narwin";
             this.p4_readyDone_btn.ThemeName = "MetroLite";
             this.p4_readyDone_btn.Visible = false;
-            this.p4_readyDone_btn.Click += new System.EventHandler(this.p4_readyDone_btn_Click);
             // 
             // p4_w_state_player5
             // 
