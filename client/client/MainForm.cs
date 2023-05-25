@@ -266,10 +266,6 @@ namespace client
             }
         }
 
-        /// <summary>
-        /// TryConnectServer 요청 후 도착하는 응답 처리
-        /// 서버 연결 성공 여부 나타냄
-        /// </summary>
         public override void ConnectServerResult(bool success)
         {
             if (success == true)
@@ -279,6 +275,10 @@ namespace client
                 p1_1_login_panel.Invoke(new MethodInvoker(delegate { p1_1_login_panel.Visible = true; }));
                 p1_signUp_btn.Invoke(new MethodInvoker(delegate { p1_signUp_btn.Visible = true; }));
                 p1_login_btn.Invoke(new MethodInvoker(delegate { p1_login_btn.Visible = true; }));
+                /*
+                p1_connect_btn.Visible = false;
+                p1_login_btn.Visible = true;
+                */
             }
             else
             {
@@ -288,11 +288,8 @@ namespace client
         }
         #endregion
 
-
         #region panel1-1: 서버 연결 후 로그인 panel
-        
         /// <summary>
-        /// 서버 연결 -> 로그인 진행
         /// 기존의 서버 연결하는 패널 위로 로그인 패널이 나타남
         /// </summary>
         private void p1_1_login_panel_VisibleChanged(object sender, EventArgs e)
@@ -301,18 +298,20 @@ namespace client
             p1_signUp_btn.Invoke(new MethodInvoker(delegate { p1_signUp_btn.Visible = true; }));
             p1_login_btn.Invoke(new MethodInvoker(delegate { p1_login_btn.Visible = true; }));
             p2_gameStart_btn.Invoke(new MethodInvoker(delegate { p2_gameStart_btn.Visible = false; }));
+            /*
+            p1_signUp_btn.Visible = true;
+            p1_login_btn.Visible = true;
+            */
         }
 
-
+        /// <summary>
+        /// 로그인 버튼을 눌렀을 때, 각 경우에 따라 다른 팝업 창 띄움
+        /// </summary>
         static string message;
         readonly object locker = new object();
         bool islock = false;
 
 
-        /// <summary>
-        /// RequestSignUp 호출 후 도착하는 응답 처리
-        /// </summary>
-        /// <param name="success"></param>
         public override void SignUp(bool success)
         {
             lock (locker)
@@ -327,24 +326,6 @@ namespace client
             }
         }
 
-        /// <summary>
-        /// RequestSignIn 호출 후 도착하는 응답 처리
-        /// </summary>
-        /// <param name="username"></param>
-        public override void SignIn(string username)
-        {
-            lock (locker)
-            {
-                islock = true;
-                message = username;
-                islock = false;
-                Monitor.Pulse(locker);
-            }
-        }
-
-        /// <summary>
-        /// 회원 가입 버튼 클릭 시 이벤트
-        /// </summary>
         private void p1_signUp_btn_Click(object sender, EventArgs e)
         {
             string username = p1_pw_tbx.Text;
@@ -412,9 +393,6 @@ namespace client
             }
         }
 
-        /// <summary>
-        /// 로그인 엔터 입력 시 자동 넘어가기 이벤트
-        /// </summary>
         private void p1_username_tbx_KeyPress(object sender, KeyPressEventArgs e)
         {
             // 엔터 입력 시 send 버튼 클릭과 같은 이벤트
@@ -465,9 +443,6 @@ namespace client
             }
         }
 
-        /// <summary>
-        /// 비밀번호 입력 시 이벤트
-        /// </summary>
         private void p1_pw_tbx_KeyPress(object sender, KeyPressEventArgs e)
         {
             // ( , : \ | ) 괄호 안의 문자 입력 시 비번 생성 안됨  
@@ -511,12 +486,13 @@ namespace client
                     }
                     if (message.Equals(p1_username_tbx.Text))
                     {
+                        //p1_gameStart_btn.Invoke(new MethodInvoker(delegate { p1_gameStart_btn.Visible = true; }));
                         panel1_login_server.Invoke(new MethodInvoker(delegate { panel1_login_server.Visible = false; }));
                         panel2_gameStart.Invoke(new MethodInvoker(delegate { panel2_gameStart.Visible = true; }));
                     }
                     else
                     {
-                        MessageBox.Show("유저 정보가 없습니다.", "Login Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Failed", "Login", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
 
                 }
@@ -524,9 +500,17 @@ namespace client
             }
         }
 
-        /// <summary>
-        /// 로그인 버튼 클릭 시 이벤트
-        /// </summary>
+        public override void SignIn(string username)
+        {
+            lock (locker)
+            {
+                islock = true;
+                message = username;
+                islock = false;
+                Monitor.Pulse(locker);
+            }
+        }
+
         private void p1_login_btn_Click(object sender, EventArgs e)
         {
             // 로그인 버튼 눌렀을 때 유효성 검사
@@ -539,9 +523,40 @@ namespace client
             {
                 ShowMessageBox("이름과 비밀번호를 정확히 입력해주세요.", "Login Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
+            // 입력 정보가 맞는 지 확인하는 팝업 띄움
+            // 팝업에 Yes, No 버튼이 있음. No가 입력되면 다시 입력 창으로 되돌아감 
             else
             {
                 result = DialogResult.Yes;
+                /*
+                string nameCheck = string.Format("당신은 {0} 님이 맞습니까?", p1_username_tbx.Text);
+                var name_messageRes = MessageBox.Show(nameCheck, "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (name_messageRes == DialogResult.No)
+                {
+                    return;
+                }
+                else
+                {
+                    name_messageRes = DialogResult.Yes;
+                }
+
+                string pwCheck = string.Format("비밀번호는 {0} 이 맞습니까?", p1_pw_tbx.Text);
+                var pw_messageRes = MessageBox.Show(pwCheck, "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (pw_messageRes == DialogResult.No)
+                {
+                    return;
+                }
+                else
+                {
+                    pw_messageRes = DialogResult.Yes;
+                }
+                
+                if (pw_messageRes == DialogResult.Yes && name_messageRes == DialogResult.Yes)
+                {
+                    result = DialogResult.Yes;
+                }
+                */
             }
 
             // 모든 정보가 맞을 때, 게임 시작 패널로 넘어감
@@ -572,7 +587,6 @@ namespace client
         }
         #endregion
 
-
         #region panel2_gameStart: 로그아웃, 게임시작 가능
 
         private void p2_logout_btn_Click(object sender, EventArgs e)
@@ -580,18 +594,14 @@ namespace client
             client.RequestSignOut();
         }
 
-
-        /// <summary>
-        /// RequestSignOut 호출 후 도착하는 응답 처리
-        /// 다시 로그인 화면으로 돌아감
-        /// </summary>
         public override void SignOut()
         {
             panel2_gameStart.Visible = false;
             p1_1_login_panel.Visible = true;
+            //panel2_gameStart.Invoke(new MethodInvoker(delegate { panel2_gameStart.Visible = false; }));
             p2_gameStart_btn.Invoke(new MethodInvoker(delegate { p2_logout_btn.Visible = false; }));
+            //p1_1_login_panel.Invoke(new MethodInvoker(delegate { p1_1_login_panel.Visible = true; }));
         }
-
 
         /// <summary>
         /// 입력 받은 username을 가져와서 문구 출력
@@ -612,7 +622,6 @@ namespace client
         }
         #endregion
 
-        
         #region panel3_roomList: 방 리스트 (방 생성, 입장, 퇴장)
 
         private void p3_roomname_tbx_VisibleChanged(object sender, EventArgs e)
@@ -627,10 +636,7 @@ namespace client
             p3_roomname_tbx.Visible = false;
         }
 
-
-        /// <summary>
-        /// 방 만들기 버튼 클릭 시 이벤트
-        /// </summary>
+        // 방 만들기 버튼 클릭 시 이벤트
         private void p3_makeRoom_btn_Click(object sender, EventArgs e)
         {
             p3_roomname_label.Visible = true;
@@ -643,9 +649,9 @@ namespace client
         }
 
 
-        /// <summary>
-        /// 서버에 존재하는 방 정보를 가져와서 방 리스트에 출력
-        /// </summary>
+        //List<string> serverRoomInfo;    // RoomList 함수가 서버로 부터 받아 온 방 정보를 사용하기 위함.
+
+        // 서버에 존재하는 방 정보를 가져와서 방 리스트에 출력
         public override void RoomList(List<string> roomList)
         {
             p3_dataGridView1.Invoke(new MethodInvoker(delegate { p3_dataGridView1.Rows.Clear(); }));
@@ -665,7 +671,6 @@ namespace client
                 p3_dataGridView1.Invoke(new MethodInvoker(delegate { p3_dataGridView1.Rows.Add(roomName, playerCount + '/' + roomMax); }));
             }
         }
-
 
         private void playCount_change(string playerCount)
         {
@@ -688,7 +693,6 @@ namespace client
                     break;
             }
         }
-
 
         /// <summary>
         /// 방 생성하기 버튼 클릭 시 이벤트
@@ -740,17 +744,14 @@ namespace client
             }
         }
 
-
-        /// <summary>
-        /// RequestRoomCreate 호출 후 도착하는 응답 처리
-        /// 서버에 새로운 방을 생성한 후 성공 여부에 따라 이벤트 처리
-        /// </summary>
-        /// <param name="success"> 방 생성 성공 여부</param>
         public override void RoomCreate(bool success)
         {
             if (success == true)
             {
                 ShowMessageBox("방 생성 성공", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                //OwnerWait();
+
                 p4_1_start_btn.Visible = true;
 
                 client.RequestSendRoomChat("시스템", p1_username_tbx.Text + "이(가) 방에 참가함");
@@ -762,10 +763,6 @@ namespace client
             }
         }
 
-
-        /// <summary>
-        /// 방 생성할 때 엔터 이벤트
-        /// </summary>
         private void p3_people_tbx_KeyPress(object sender, KeyPressEventArgs e)
         {
             // 숫자, 백스페이스, '.'만 입력 가능
@@ -818,10 +815,6 @@ namespace client
         }
 
 
-        /// <summary>
-        /// 앞에 켜져 있는 패널 전부 꺼주는 함수
-        /// 패널 꼬이지 않게 하기 위함
-        /// </summary>
         public void Changing()
         {
             panel4_1_owner_waitRoom.Invoke(new MethodInvoker(delegate { panel4_1_owner_waitRoom.Visible = false; }));
@@ -832,13 +825,7 @@ namespace client
             panel6_Answer.Invoke(new MethodInvoker(delegate { panel6_Answer.Visible = false; }));
             panel6_2_Answer_Wait.Invoke(new MethodInvoker(delegate { panel6_2_Answer_Wait.Visible = false; }));
         }
-
-
-        /// <summary>
-        /// 방장의 게임 시작 전 화면
-        /// 방장 고유의 권한 기능 포함
-        /// 시작하기, 친구하기 , 방장 넘기기 가능
-        /// </summary>
+        //방장의 게임 시작 전 화면. 게임 시작 버튼, 강퇴 버튼 있어야 됨.
         public override void OwnerWait()
         {
             Changing();
@@ -851,28 +838,13 @@ namespace client
             panel4_1_owner_waitRoom.Invoke(new MethodInvoker(delegate { panel4_1_owner_waitRoom.Visible = true; }));
             p4_1_chat_tbx.Invoke(new MethodInvoker(delegate { p4_1_chat_tbx.Text = ""; }));
 
+            //client.RequestGameReady();
+            //client.RequestPlayerList(roomname);
             p4_1_current_player();
         }
 
-
-        /// <summary>
-        /// 플레이어의 게임 시작 전 화면
-        /// 준비하기, 친구하기 기능만 가능
-        /// </summary>
-        public override void PlayerWait()
-        {
-            Changing();
-            p4_chat_tbx.Invoke(new MethodInvoker(delegate { p4_chat_tbx.Text = ""; }));
-
-            p4_roomInfo_label.Invoke(new MethodInvoker(delegate { p4_roomInfo_label.Text = "플레이어 방"; }));
-            panel3_roomList.Invoke(new MethodInvoker(delegate { panel3_roomList.Visible = false; }));
-            panel4_player_waitRoom.Invoke(new MethodInvoker(delegate { panel4_player_waitRoom.Visible = true; }));
-        }
-
-
-        /// <summary>
-        /// 테이블 내 입장하기 버튼 클릭 시 이벤트
-        /// </summary>
+        
+        //테이블 내 입장하기 버튼 클릭 시
         private void p3_dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if(e.RowIndex != -1)    // dgv 비었을 때 헤더 클릭 오류 해결
@@ -882,27 +854,23 @@ namespace client
                 if (rName != string.Empty)
                 {
                     client.RequestRoomJoin(rName);   // 서버에 방 이름 정보 보냄
+                    //panel3_roomList.Invoke(new MethodInvoker(delegate { panel3_roomList.Visible = false; }));
+                    //panel4_player_waitRoom.Invoke(new MethodInvoker(delegate { panel4_player_waitRoom.Visible = true; }));
+                    //client.RequestRoomCreate(roomName, "5");
+                    //PlayerWait();
                 }
             }
         }
 
-
-        /// <summary>
-        /// 테이블 열 이름 클릭 시 정렬 이벤트
-        /// </summary>
         private void p3_dataGridView1_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
+            
             foreach (DataGridViewColumn item in p3_dataGridView1.Columns)
             {
                 item.SortMode = DataGridViewColumnSortMode.NotSortable;
             }
         }
 
-
-        /// <summary>
-        ///  RequestRoomJoin 호출 후 도착하는 응답. 
-        ///  서버에 있는 방에 참가한 후 result 값에 따라 해당 메시지 보여주고, 방에 입장
-        /// </summary>
         public override void RoomJoin(string result)
         {
             if (result.Equals("-1"))
@@ -941,20 +909,26 @@ namespace client
             }
         }
 
+        public override void PlayerWait()
+        {
+            Changing();
+            // 참가자의 게임 시작 전 화면 -> 플레이어 대기 방 화면
+            //panel3_roomList.Visible = false;
+            //panel4_player_waitRoom.Visible = true;
+            p4_chat_tbx.Invoke(new MethodInvoker(delegate {  p4_chat_tbx.Text = ""; }));
 
-        /// <summary>
-        /// 새로 고침 버튼 클릭 시 이벤트
-        /// </summary>
+            p4_roomInfo_label.Invoke(new MethodInvoker(delegate { p4_roomInfo_label.Text = "플레이어 방"; }));
+            panel3_roomList.Invoke(new MethodInvoker(delegate { panel3_roomList.Visible = false; }));
+            panel4_player_waitRoom.Invoke(new MethodInvoker(delegate { panel4_player_waitRoom.Visible = true; }));
+        }
+
+        // 새로 고침 버튼 클릭 시 이벤트
         private void p3_refresh_btn_Click(object sender, EventArgs e)
         {
             client.RequestRoomList();
         }
 
-
-        /// <summary>
-        /// 뒤로 가기 버튼 클릭 시 이벤트
-        /// panel3 방 리스트에서 panel2 게임 시작 패널로 이동
-        /// </summary>
+        // 뒤로 가기 버튼 클릭 시 이벤트
         private void p3_back_btn_Click(object sender, EventArgs e)
         {
             client.RequestRoomOut("0");
@@ -964,6 +938,8 @@ namespace client
             p3_create_btn.Visible = false;
             p3_roomname_label.Visible = false;
             p3_roomname_tbx.Visible = false;
+            //panel3_roomList.Visible = false;
+            //panel2_gameStart.Visible = true;
             backPanel();
         }
 
@@ -976,12 +952,6 @@ namespace client
 
 
         #region panel4_waitRoom: 대기 방(채팅)
-       
-        
-        /// <summary>
-        /// RequestGameReady 호출 후 도착하는 응답 처리
-        /// 게임 준비 상태이면 플레이어 화면에서 버튼이 Ready, 준비 해제 상태이면 Cancel
-        /// </summary>
         public override void GameReady(bool ready)
         {
             string player = p1_username_tbx.Text;
@@ -995,11 +965,6 @@ namespace client
             }
         }
 
-
-        /// <summary>
-        /// RequestReadyList 호출 후 도착하는 응답 처리
-        /// </summary>
-        /// <param name="readyList">현재 준비가 완료된 유저 이름이 있는 리스트</param>
         public override void ReadyList(List<string> readyList)
         {
             // 재입장시. 준비 완료 -> 대기중으로 바뀌지 않아 대기 중은 패널 시작시 넣음.
@@ -1033,53 +998,48 @@ namespace client
             if (readyList.Contains(p4_1_player5.Text)) p4_1_state_player5.Invoke(new MethodInvoker(delegate { p4_1_state_player5.Text = "준비완료"; }));
         }
 
-
-        /// <summary>
-        /// 목록 클리어 > owner화면 & 접속자 화면
-        /// </summary>
+        // 목록 클리어 > owner화면 & 접속자 화면
         private void PlayerList_clear()
         {
             // 방장 = player1 > 방장이라 state label 설정 x
-            p4_player1.Invoke(new MethodInvoker(delegate { p4_player1.Text = ""; }));                           // 이름 초기화
-            p4_player1.Invoke(new MethodInvoker(delegate { p4_player1.ForeColor = Color.Black; }));             // 글자색 초기화
+            p4_player1.Invoke(new MethodInvoker(delegate { p4_player1.Text = ""; }));   // 이름 초기화
+            p4_player1.Invoke(new MethodInvoker(delegate { p4_player1.ForeColor = Color.Black; })); // 글자색 초기화
             p4_1_player1.Invoke(new MethodInvoker(delegate { p4_1_player1.Text = ""; }));
             p4_1_player1.Invoke(new MethodInvoker(delegate { p4_1_player1.ForeColor = Color.Black; }));
 
-            p5_player1.Invoke(new MethodInvoker(delegate { p5_player1.Text = ""; }));       
+            p5_player1.Invoke(new MethodInvoker(delegate { p5_player1.Text = ""; }));   // 이름 초기화
             p5_1_player1.Invoke(new MethodInvoker(delegate { p5_1_player1.Text = ""; }));
             p5_2_player1.Invoke(new MethodInvoker(delegate { p5_2_player1.Text = ""; }));
 
-            p6_player1.Invoke(new MethodInvoker(delegate { p6_player1.Text = ""; }));       
+            p6_player1.Invoke(new MethodInvoker(delegate { p6_player1.Text = ""; }));   // 이름 초기화
             p6_2_player1.Invoke(new MethodInvoker(delegate { p6_2_player1.Text = ""; }));
-
 
             // player2  
             p4_player2.Invoke(new MethodInvoker(delegate { p4_player2.Text = ""; }));
             p4_player2.Invoke(new MethodInvoker(delegate { p4_player2.ForeColor = Color.Black; }));
-            p4_player2.Invoke(new MethodInvoker(delegate { p4_player2.BackColor = Color.LightGray; }));         
+            p4_player2.Invoke(new MethodInvoker(delegate { p4_player2.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p4_w_state_player2.Invoke(new MethodInvoker(delegate { p4_w_state_player2.Visible = false; }));
             p4_1_player2.Invoke(new MethodInvoker(delegate { p4_1_player2.Text = ""; }));
             p4_1_player2.Invoke(new MethodInvoker(delegate { p4_1_player2.ForeColor = Color.Black; }));
             p4_1_player2.Invoke(new MethodInvoker(delegate { p4_1_player2.BackColor = Color.LightGray; }));
             p4_1_state_player2.Invoke(new MethodInvoker(delegate { p4_1_state_player2.Visible = false; }));
 
-            p5_player2.Invoke(new MethodInvoker(delegate { p5_player2.Text = ""; }));                           
-            p5_player2.Invoke(new MethodInvoker(delegate { p5_player2.BackColor = Color.LightGray; }));         
+            p5_player2.Invoke(new MethodInvoker(delegate { p5_player2.Text = ""; }));   // 이름 초기화
+            p5_player2.Invoke(new MethodInvoker(delegate { p5_player2.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_player2_score.Invoke(new MethodInvoker(delegate { p5_player2_score.Visible = false; }));
-            p5_1_player2.Invoke(new MethodInvoker(delegate { p5_1_player2.Text = ""; }));                       
-            p5_1_player2.Invoke(new MethodInvoker(delegate { p5_1_player2.BackColor = Color.LightGray; }));     
+            p5_1_player2.Invoke(new MethodInvoker(delegate { p5_1_player2.Text = ""; }));// 이름 초기화
+            p5_1_player2.Invoke(new MethodInvoker(delegate { p5_1_player2.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_1_player2_score.Invoke(new MethodInvoker(delegate { p5_1_player2_score.Visible = false; }));
             p5_2_player2.Invoke(new MethodInvoker(delegate { p5_2_player2.Text = ""; }));
-            p5_2_player2.Invoke(new MethodInvoker(delegate { p5_2_player2.BackColor = Color.LightGray; }));     
+            p5_2_player2.Invoke(new MethodInvoker(delegate { p5_2_player2.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_2_player2_score.Invoke(new MethodInvoker(delegate { p5_2_player2_score.Visible = false; }));
 
-            p6_player2.Invoke(new MethodInvoker(delegate { p6_player2.Text = ""; }));                           
-            p6_player2.Invoke(new MethodInvoker(delegate { p6_player2.BackColor = Color.LightGray; }));         
+            p6_player2.Invoke(new MethodInvoker(delegate { p6_player2.Text = ""; }));   // 이름 초기화
+            p6_player2.Invoke(new MethodInvoker(delegate { p6_player2.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p6_player2_score.Invoke(new MethodInvoker(delegate { p6_player2_score.Visible = false; }));
             p6_2_player2.Invoke(new MethodInvoker(delegate { p6_2_player2.Text = ""; }));
-            p6_2_player2.Invoke(new MethodInvoker(delegate { p6_2_player2.BackColor = Color.LightGray; }));     
+            p6_2_player2.Invoke(new MethodInvoker(delegate { p6_2_player2.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p6_2_player2_score.Invoke(new MethodInvoker(delegate { p6_2_player2_score.Visible = false; }));
-
 
             // player3
             p4_player3.Invoke(new MethodInvoker(delegate { p4_player3.Text = ""; }));
@@ -1091,23 +1051,22 @@ namespace client
             p4_1_player3.Invoke(new MethodInvoker(delegate { p4_1_player3.BackColor = Color.LightGray; }));
             p4_1_state_player3.Invoke(new MethodInvoker(delegate { p4_1_state_player3.Visible = false; }));
 
-            p5_player3.Invoke(new MethodInvoker(delegate { p5_player3.Text = ""; }));                          
-            p5_player3.Invoke(new MethodInvoker(delegate { p5_player3.BackColor = Color.LightGray; }));         
+            p5_player3.Invoke(new MethodInvoker(delegate { p5_player3.Text = ""; }));   // 이름 초기화
+            p5_player3.Invoke(new MethodInvoker(delegate { p5_player3.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_player3_score.Invoke(new MethodInvoker(delegate { p5_player3_score.Visible = false; }));
-            p5_1_player3.Invoke(new MethodInvoker(delegate { p5_1_player3.Text = ""; }));                      
-            p5_1_player3.Invoke(new MethodInvoker(delegate { p5_1_player3.BackColor = Color.LightGray; }));     
+            p5_1_player3.Invoke(new MethodInvoker(delegate { p5_1_player3.Text = ""; }));// 이름 초기화
+            p5_1_player3.Invoke(new MethodInvoker(delegate { p5_1_player3.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_1_player3_score.Invoke(new MethodInvoker(delegate { p5_1_player3_score.Visible = false; }));
             p5_2_player3.Invoke(new MethodInvoker(delegate { p5_2_player3.Text = ""; }));
-            p5_2_player3.Invoke(new MethodInvoker(delegate { p5_2_player3.BackColor = Color.LightGray; }));     
+            p5_2_player3.Invoke(new MethodInvoker(delegate { p5_2_player3.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_2_player3_score.Invoke(new MethodInvoker(delegate { p5_2_player3_score.Visible = false; }));
 
-            p6_player3.Invoke(new MethodInvoker(delegate { p6_player3.Text = ""; }));                           
-            p6_player3.Invoke(new MethodInvoker(delegate { p6_player3.BackColor = Color.LightGray; }));         
+            p6_player3.Invoke(new MethodInvoker(delegate { p6_player3.Text = ""; }));   // 이름 초기화
+            p6_player3.Invoke(new MethodInvoker(delegate { p6_player3.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p6_player3_score.Invoke(new MethodInvoker(delegate { p6_player3_score.Visible = false; }));
             p6_2_player3.Invoke(new MethodInvoker(delegate { p6_2_player3.Text = ""; }));
-            p6_2_player3.Invoke(new MethodInvoker(delegate { p6_2_player3.BackColor = Color.LightGray; }));     
+            p6_2_player3.Invoke(new MethodInvoker(delegate { p6_2_player3.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p6_2_player3_score.Invoke(new MethodInvoker(delegate { p6_2_player3_score.Visible = false; }));
-
 
             // player4
             p4_player4.Invoke(new MethodInvoker(delegate { p4_player4.Text = ""; }));
@@ -1119,23 +1078,22 @@ namespace client
             p4_1_player4.Invoke(new MethodInvoker(delegate { p4_1_player4.BackColor = Color.LightGray; }));
             p4_1_state_player4.Invoke(new MethodInvoker(delegate { p4_1_state_player4.Visible = false; }));
 
-            p5_player4.Invoke(new MethodInvoker(delegate { p5_player4.Text = ""; }));                           
-            p5_player4.Invoke(new MethodInvoker(delegate { p5_player4.BackColor = Color.LightGray; }));         
+            p5_player4.Invoke(new MethodInvoker(delegate { p5_player4.Text = ""; }));   // 이름 초기화
+            p5_player4.Invoke(new MethodInvoker(delegate { p5_player4.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_player4_score.Invoke(new MethodInvoker(delegate { p5_player4_score.Visible = false; }));
-            p5_1_player4.Invoke(new MethodInvoker(delegate { p5_1_player4.Text = ""; }));                       
-            p5_1_player4.Invoke(new MethodInvoker(delegate { p5_1_player4.BackColor = Color.LightGray; }));     
+            p5_1_player4.Invoke(new MethodInvoker(delegate { p5_1_player4.Text = ""; }));// 이름 초기화
+            p5_1_player4.Invoke(new MethodInvoker(delegate { p5_1_player4.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_1_player4_score.Invoke(new MethodInvoker(delegate { p5_1_player4_score.Visible = false; }));
             p5_2_player4.Invoke(new MethodInvoker(delegate { p5_2_player4.Text = ""; }));
-            p5_2_player4.Invoke(new MethodInvoker(delegate { p5_2_player4.BackColor = Color.LightGray; }));     
+            p5_2_player4.Invoke(new MethodInvoker(delegate { p5_2_player4.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_2_player4_score.Invoke(new MethodInvoker(delegate { p5_2_player4_score.Visible = false; }));
 
-            p6_player4.Invoke(new MethodInvoker(delegate { p6_player4.Text = ""; }));                          
-            p6_player4.Invoke(new MethodInvoker(delegate { p6_player4.BackColor = Color.LightGray; }));        
+            p6_player4.Invoke(new MethodInvoker(delegate { p6_player4.Text = ""; }));   // 이름 초기화
+            p6_player4.Invoke(new MethodInvoker(delegate { p6_player4.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p6_player4_score.Invoke(new MethodInvoker(delegate { p6_player4_score.Visible = false; }));
             p6_2_player4.Invoke(new MethodInvoker(delegate { p6_2_player4.Text = ""; }));
-            p6_2_player4.Invoke(new MethodInvoker(delegate { p6_2_player4.BackColor = Color.LightGray; }));     
+            p6_2_player4.Invoke(new MethodInvoker(delegate { p6_2_player4.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p6_2_player4_score.Invoke(new MethodInvoker(delegate { p6_2_player4_score.Visible = false; }));
-
 
             // player5
             p4_player5.Invoke(new MethodInvoker(delegate { p4_player5.Text = ""; }));
@@ -1147,29 +1105,25 @@ namespace client
             p4_1_player5.Invoke(new MethodInvoker(delegate { p4_1_player5.BackColor = Color.LightGray; }));
             p4_1_state_player5.Invoke(new MethodInvoker(delegate { p4_1_state_player5.Visible = false; }));
 
-            p5_player5.Invoke(new MethodInvoker(delegate { p5_player5.Text = ""; }));                           
-            p5_player5.Invoke(new MethodInvoker(delegate { p5_player5.BackColor = Color.LightGray; }));         
+            p5_player5.Invoke(new MethodInvoker(delegate { p5_player5.Text = ""; }));   // 이름 초기화
+            p5_player5.Invoke(new MethodInvoker(delegate { p5_player5.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_player5_score.Invoke(new MethodInvoker(delegate { p5_player5_score.Visible = false; }));
-            p5_1_player5.Invoke(new MethodInvoker(delegate { p5_1_player5.Text = ""; }));
-            p5_1_player5.Invoke(new MethodInvoker(delegate { p5_1_player5.BackColor = Color.LightGray; }));   
+            p5_1_player5.Invoke(new MethodInvoker(delegate { p5_1_player5.Text = ""; }));// 이름 초기화
+            p5_1_player5.Invoke(new MethodInvoker(delegate { p5_1_player5.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_1_player5_score.Invoke(new MethodInvoker(delegate { p5_1_player5_score.Visible = false; }));
             p5_2_player5.Invoke(new MethodInvoker(delegate { p5_2_player5.Text = ""; }));
-            p5_2_player5.Invoke(new MethodInvoker(delegate { p5_2_player5.BackColor = Color.LightGray; }));   
+            p5_2_player5.Invoke(new MethodInvoker(delegate { p5_2_player5.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p5_2_player5_score.Invoke(new MethodInvoker(delegate { p5_2_player5_score.Visible = false; }));
 
-            p6_player5.Invoke(new MethodInvoker(delegate { p6_player5.Text = ""; }));  
-            p6_player5.Invoke(new MethodInvoker(delegate { p6_player5.BackColor = Color.LightGray; }));  
+            p6_player5.Invoke(new MethodInvoker(delegate { p6_player5.Text = ""; }));   // 이름 초기화
+            p6_player5.Invoke(new MethodInvoker(delegate { p6_player5.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p6_player5_score.Invoke(new MethodInvoker(delegate { p6_player5_score.Visible = false; }));
             p6_2_player5.Invoke(new MethodInvoker(delegate { p6_2_player5.Text = ""; }));
-            p6_2_player5.Invoke(new MethodInvoker(delegate { p6_2_player5.BackColor = Color.LightGray; }));  
+            p6_2_player5.Invoke(new MethodInvoker(delegate { p6_2_player5.BackColor = Color.LightGray; }));   // 배경 색 초기화
             p6_2_player5_score.Invoke(new MethodInvoker(delegate { p6_2_player5_score.Visible = false; }));
         }
 
-
-
-        /// <summary>
-        /// 접속자 리스트 - 문제: 방장만 제대로 출력x(only 자기 이름)
-        /// </summary>
+        // 접속자 리스트 - 문제: 방장만 제대로 출력x(only 자기 이름)
         public override void PlayerList(List<string> playerList)
         {
             int cnt = playerList.Count;
@@ -1190,7 +1144,6 @@ namespace client
                 p4_player2.Invoke(new MethodInvoker(delegate { p4_player2.Text = playerList[1]; }));
                 p4_player2.Invoke(new MethodInvoker(delegate { p4_player2.BackColor = Color.LightSkyBlue; }));
                 p4_w_state_player2.Invoke(new MethodInvoker(delegate { p4_w_state_player2.Visible = true; }));
-
 
                 // 방장
                 p4_1_player2.Invoke(new MethodInvoker(delegate { p4_1_player2.Text = playerList[1]; }));
@@ -1320,11 +1273,8 @@ namespace client
             p4_1_player_change();
             client.RequestPlayerList(roomname);
         }
-
-
-        /// <summary>
-        /// 대기화면 채팅, 게임 질의응답
-        /// </summary>
+        
+        //대기화면 채팅, 게임 질의응답 
         public override void RoomChat(List<string> chatList)
         {
             // 플레이어 채팅
@@ -1383,25 +1333,64 @@ namespace client
                     p6_2_QA_tbx.ScrollToCaret();}));
             });
         }
+       
+        public override void Whisper(string msg)
+        {
+           
+            int sender = Convert.ToInt32(msg.Substring(0, 1));
+            switch (sender)
+            {
+                case 0:
+                    p4_1_player1_ballon.Invoke(new MethodInvoker(delegate { p4_1_player1_ballon.Text = msg.Substring(1); }));
+                    p4_1_player1_ballon.Invoke(new MethodInvoker(delegate { p4_1_player1_ballon.Visible = true; }));
+                    p4_player1_ballon.Invoke(new MethodInvoker(delegate { p4_player1_ballon.Text = msg.Substring(1); }));
+                    p4_player1_ballon.Invoke(new MethodInvoker(delegate { p4_player1_ballon.Visible = true; }));
 
+                    break;
+                case 1:
+                    p4_1_player2_ballon.Invoke(new MethodInvoker(delegate { p4_1_player2_ballon.Text = msg.Substring(1); }));
+                    p4_1_player2_ballon.Invoke(new MethodInvoker(delegate { p4_1_player2_ballon.Visible = true; }));
+                    p4_player2_ballon.Invoke(new MethodInvoker(delegate { p4_player2_ballon.Text = msg.Substring(1); }));
+                    p4_player2_ballon.Invoke(new MethodInvoker(delegate { p4_player2_ballon.Visible = true; }));
 
+                    break;
+                case 2:
+                    p4_1_player3_ballon.Invoke(new MethodInvoker(delegate { p4_1_player3_ballon.Text = msg.Substring(1); }));
+                    p4_1_player3_ballon.Invoke(new MethodInvoker(delegate { p4_1_player3_ballon.Visible = true; }));
+                    p4_player3_ballon.Invoke(new MethodInvoker(delegate { p4_player3_ballon.Text = msg.Substring(1); }));
+                    p4_player3_ballon.Invoke(new MethodInvoker(delegate { p4_player3_ballon.Visible = true; }));
 
+                    break;
+                case 3:
+                    p4_1_player4_ballon.Invoke(new MethodInvoker(delegate { p4_1_player4_ballon.Text = msg.Substring(1); }));
+                    p4_1_player4_ballon.Invoke(new MethodInvoker(delegate { p4_1_player4_ballon.Visible = true; }));
+                    p4_player4_ballon.Invoke(new MethodInvoker(delegate { p4_player4_ballon.Text = msg.Substring(1); }));
+                    p4_player4_ballon.Invoke(new MethodInvoker(delegate { p4_player4_ballon.Visible = true; }));
+
+                    break;
+                case 4:
+                    p4_1_player5_ballon.Invoke(new MethodInvoker(delegate { p4_1_player5_ballon.Text = msg.Substring(1); }));
+                    p4_1_player5_ballon.Invoke(new MethodInvoker(delegate { p4_1_player5_ballon.Visible = true; }));
+                    p4_player5_ballon.Invoke(new MethodInvoker(delegate { p4_player5_ballon.Text = msg.Substring(1); }));
+                    p4_player5_ballon.Invoke(new MethodInvoker(delegate { p4_player5_ballon.Visible = true; }));
+                    break;
+            }
+        }
+     
         #region Owner(방장)
 
-
-        /// <summary>
-        /// 게임 시작하기 버튼 누르면 게임에 모두 준비되었는 지 확인하는 request 보냄
-        /// 전부 준비 안 되어 있으면 GameStartFail() 실행
-        /// </summary>
         private void p4_1_start_btn_Click(object sender, EventArgs e)
         {
+            // 게임 시작하기 버튼 누르면 게임에 모두 준비되었는 지 확인하는 request 보냄
+            // 전부 준비 안 되어 있으면 GameStartFail() 실행
+            //panel4_1_owner_waitRoom.Visible = false;
+
+            // 화면 지저분하게 전환되어서 일단 보류
+            // ShowMessageBox("게임을 시작합니다.","Start!",MessageBoxButtons.OK,MessageBoxIcon.Information);
+            //client.RequestReadyList();
             client.RequestGameStart();
         }
 
-
-        /// <summary>
-        /// 강제로 게임이 종료되면 나타나는 이벤트
-        /// </summary>
         public override void ForceGameOver(int flag)
         {
             if(flag == 1)
@@ -1414,16 +1403,13 @@ namespace client
             }
         }
 
-
-        /// <summary>
-        /// 전부 시작되지 않은 상태에서 방장이 start 버튼을 눌렀을 때 호출됨.
-        /// </summary>
+        // 전부 시작되지 않은 상태에서 방장이 start 버튼을 눌렀을 때 호출됨.
         public override void GameStartFail()
         {
+            // 방장 패널에서 시작하기 버튼 안 띄움
+            //p4_1_start_btn.Visible = false;
             ShowMessageBox("준비가 완료되지 않았습니다.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-
-
 
         private void p4_1_message_tbx_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -1454,8 +1440,8 @@ namespace client
 
         private void panel4_1_owner_waitRoom_VisibleChanged(object sender, EventArgs e)
         {
-            this.ActiveControl = p4_1_message_tbx; // 커서 포커스 설정
-
+            //client.RequestRoomList();
+            //RoomList(serverRoomInfo);
             client.RequestPlayerList(roomname);
 
             if (panel4_1_owner_waitRoom.Visible == true)
@@ -1467,11 +1453,7 @@ namespace client
             }
         }
 
-
-
-        /// <summary>
-        /// owner화면에 현재 자신 표시
-        /// </summary>
+        //owner화면에 현재 자신 표시
         private void p4_1_current_player()
         {
             string p_name = p1_username_tbx.Text;
@@ -1489,11 +1471,7 @@ namespace client
                 p4_1_player5.ForeColor = Color.DarkGreen;
         }
 
-
-        /// <summary>
-        /// 기본 폼 설정 > 나가기 시 남은 사람들 폼에 적용
-        /// </summary>
-        private void p4_1_player_change()
+        private void p4_1_player_change() // 기본 폼 설정 > 나가기 시 남은 사람들 폼에 적용
         {
             p4_1_player2.BackColor = Color.LightGray;
             p4_1_player2.Invoke(new MethodInvoker(delegate { p4_1_player2.Text = ""; }));
@@ -1506,6 +1484,52 @@ namespace client
         }
         #endregion
 
+        #region RoomOut
+        public override void RoomOut()
+        {
+            ShowMessageBox("방 나옴", "Room Out", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        public override void Kicked()
+        {
+            p3_title_label.Visible = false;
+            p3_people_label.Visible = false;
+            p3_people_tbx.Visible = false;
+            p3_create_btn.Visible = false;
+            p3_roomname_label.Visible = false;
+            p3_roomname_tbx.Visible = false;
+            backPanel();
+            ShowMessageBox("강제 퇴장당함", "Room Out", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void p4_Out_btn_Click(object sender, EventArgs e)
+        {
+            client.RequestRoomOut("0");
+            p4_chat_tbx.Text = "";
+            p4_ready_btn.Text = "READY";
+            p3_people_label.Visible = false;
+            p3_people_tbx.Visible = false;
+            p3_create_btn.Visible = false;
+            p3_roomname_label.Visible = false;
+            panel4_player_waitRoom.Visible = false;
+            panel3_roomList.Visible = true;
+
+            p4_player_change();
+            p4_1_player_change();
+        }
+
+        private void p4_1_out_btn_Click(object sender, EventArgs e)
+        {
+            client.RequestRoomOut("0");
+            p4_1_chat_tbx.Text = "";
+            //p4_1_start_btn.Text = "READY";
+            p3_people_label.Visible = false;
+            p3_people_tbx.Visible = false;
+            p3_create_btn.Visible = false;
+            p3_roomname_label.Visible = false;
+            panel4_1_owner_waitRoom.Invoke(new MethodInvoker(delegate { panel4_1_owner_waitRoom.Visible = false; }));
+            panel3_roomList.Invoke(new MethodInvoker(delegate { panel3_roomList.Visible = true; }));
+        }
+        #endregion
 
         #region player(플레이어)
         private void p4_message_tbx_KeyPress(object sender, KeyPressEventArgs e)
@@ -1526,6 +1550,43 @@ namespace client
         private void p4_ready_btn_Click(object sender, EventArgs e)
         {
             client.RequestGameReady();
+            /*
+            client.RequestReadyList();
+            p4_Out_btn.Invoke(new MethodInvoker(delegate { p4_Out_btn.Visible = false; }));
+
+            //p4_gameStart_btn.Visible = true;
+            string player = p1_username_tbx.Text;
+            if (player == p4_player2.Text)
+                p4_w_state_player2.Text = "준비 완료";
+            if (player == p4_player3.Text)
+                p4_w_state_player3.Text = "준비 완료";
+            if (player == p4_player4.Text)
+                p4_w_state_player4.Text = "준비 완료";
+            if (player == p4_player5.Text)
+                p4_w_state_player5.Text = "준비 완료";
+            
+            */
+            //Game_start = 2;
+            //Q_AList.Clear();
+        }
+        /*
+            // 플레이어의 준비하기 버튼 클릭 후 준비 상태 보냄
+            client.RequestGameReady();
+
+            panel4_player_waitRoom.Visible = false;
+            panel6_Answer.Visible = true; //p6화면 확인 test
+        }
+        */
+        private void p4_readyDone_btn_Click(object sender, EventArgs e)
+        {
+            
+            // 플레이어가 준비 완료 버튼을 한 번 더 누르면 준비 상태 해지
+            // 준비 완료 버튼 숨김
+            /*
+            p4_readyDone_btn.Invoke(new MethodInvoker(delegate { p4_readyDone_btn.Visible = false; }));
+            client.RequestGameReady();
+            */
+            
         }
 
         private void p4_refesh_btn_Click(object sender, EventArgs e)
@@ -1554,8 +1615,49 @@ namespace client
                 p4_w_state_player4.Invoke(new MethodInvoker(delegate { p4_w_state_player4.Text = "대기 중"; }));
                 p4_w_state_player5.Invoke(new MethodInvoker(delegate { p4_w_state_player5.Text = "대기 중"; }));
 
-                this.ActiveControl = p4_message_tbx; // 커서 포커스 설정
+                //client.RequestRoomList();
+                //RoomList(serverRoomInfo);
+                /*
+                if(serverRoomInfo!=null)
+                    foreach (string room in serverRoomInfo)
+                    {
+                        string[] roomInfo = room.Split(',');
+                        string roomName = roomInfo[0];
+                        string playerCount = roomInfo[1];
+                        string roomMax = roomInfo[2];
+
+                        //p4_roomInfo_label.Text = "플레이어 방";
+                        p4_roomInfo_label.Invoke(new MethodInvoker(delegate { p4_roomInfo_label.Text = "플레이어 방"; }));
+                        //p4_roomInfo_label.Invoke(new MethodInvoker(delegate { p4_roomInfo_label.Text = string.Format("{0} 님 {1} 방 접속 중", p1_username_tbx.Text, roomName); }));
+                        // "방 이름 - 접속 인원 / 최대 정원" 으로 나타나야 하는데, 접속 인원이 반영 안됨.
+                        // p4_roomInfo_label.Text = String.Format("{0} 방 - {1} / {2}", roomName, playerCount, roomMax);
+
+                        switch (playerCount)
+                        {
+                            case "0":
+                                p4_player1.Invoke(new MethodInvoker(delegate { p4_player1.Text = p1_username_tbx.Text; }));
+                                break;
+                            case "1":
+                                p4_player2.Invoke(new MethodInvoker(delegate { p4_player2.Text = p1_username_tbx.Text; }));
+                                break;
+                            case "2":
+                                p4_player3.Invoke(new MethodInvoker(delegate { p4_player3.Text = p1_username_tbx.Text; }));
+                                break;
+                            case "3":
+                                p4_player4.Invoke(new MethodInvoker(delegate { p4_player4.Text = p1_username_tbx.Text; }));
+                                break;
+                            case "4":
+                                p4_player5.Invoke(new MethodInvoker(delegate { p4_player5.Text = p1_username_tbx.Text; }));
+                                break;
+                        }
+                    }
+                */
             }
+            else
+            {
+                //p4_roomInfo_label.Invoke(new MethodInvoker(delegate { p4_roomInfo_label.Visible = false; }));
+            }
+
         }  
 
         //일반 접속자 화면에 현재 자신 표시
@@ -1607,371 +1709,295 @@ namespace client
         }
         */
         #endregion
-
-
-        #region RoomOut
-        public override void RoomOut()
-        {
-            ShowMessageBox("방 나옴", "Room Out", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        /// <summary>
-        /// 플레이어 대기 방 나옴
-        /// </summary>
-        private void p4_Out_btn_Click(object sender, EventArgs e)
-        {
-            client.RequestRoomOut("0");
-            p4_chat_tbx.Text = "";
-            p4_ready_btn.Text = "READY";
-            p3_people_label.Visible = false;
-            p3_people_tbx.Visible = false;
-            p3_create_btn.Visible = false;
-            p3_roomname_label.Visible = false;
-            panel4_player_waitRoom.Visible = false;
-            panel3_roomList.Visible = true;
-
-            p4_player_change();
-            p4_1_player_change();
-        }
-
-
-        /// <summary>
-        /// 방장 대기 방 나옴
-        /// </summary>
-        private void p4_1_out_btn_Click(object sender, EventArgs e)
-        {
-            client.RequestRoomOut("0");
-            p4_1_chat_tbx.Text = "";
-            p3_people_label.Visible = false;
-            p3_people_tbx.Visible = false;
-            p3_create_btn.Visible = false;
-            p3_roomname_label.Visible = false;
-            panel4_1_owner_waitRoom.Invoke(new MethodInvoker(delegate { panel4_1_owner_waitRoom.Visible = false; }));
-            panel3_roomList.Invoke(new MethodInvoker(delegate { panel3_roomList.Visible = true; }));
-        }
-        #endregion
-    
         #endregion
 
-
-        #region 게임 진행 - panel5_Owner, 5_1_Owner_Answer, 5_2_Owner_Wait : 출제자 화면
-
-        private void panel5_Owner_VisibleChanged(object sender, EventArgs e)
+        public override void CurrentQuestioner(string username)
         {
-            this.ActiveControl = p5_message_tbx; // 커서 포커스 설정
-        }
+            // 상태 라벨 true로 하기
+            p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Visible = true; }));
 
-        private void p5_send_btn_Click(object sender, EventArgs e)
-        {
-            // presenterchoice 화면과 연결됨 -> panel 5
-            p5_input_label.Invoke(new MethodInvoker(delegate { p5_input_label.Text = p5_message_tbx.Text; }));
-            client.RequestWordSelect(p5_input_label.Text);
-        }
+            // 패널 안이라 위치에 차이가 있음 > player 라벨과 차이로 계산하여 다시 위치 설정
+            int x = p5_1_player1.Location.X - 7;
+            int y1 = p5_1_player1.Location.Y - 7;
+            int y2 = p5_1_player2.Location.Y - 6;
+            int y3 = p5_1_player3.Location.Y - 6;
+            int y4 = p5_1_player4.Location.Y - 6;
+            int y5 = p5_1_player5.Location.Y - 6;
 
-        /// <summary>
-        /// 게임 시작 후 출제자가 제시어 정하는 화면
-        /// </summary>
-        public override void PresenterChoice()
-        {
-            Changing();
-            // RequestWordSelect() 을 보낼 수 있는 버튼 필요 -> send 버튼으로 지정
-            panel5_Owner.Invoke(new MethodInvoker(delegate { panel5_Owner.Visible = true; }));
-            p6_2_solution_label.Invoke(new MethodInvoker(delegate { p6_2_solution_label.Text = "입력 중..."; }));
-        }
+            // turn 위치로 이동
+            // p5 
+            if (p5_player1.Text == username) p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Location = new Point(x, y1); }));
+            else if (p5_player2.Text == username) p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Location = new Point(x, y2); }));
+            else if (p5_player3.Text == username) p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Location = new Point(x, y3); }));
+            else if (p5_player4.Text == username) p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Location = new Point(x, y4); }));
+            else if (p5_player5.Text == username) p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Location = new Point(x, y5); }));
 
+            // p5_1
+            p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Visible = true; }));
 
-        /// <summary>
-        /// 게임 시작 후 출제자가 질문을 기다리는 화면
-        /// </summary>
-        public override void PresenterWait()
-        {
-            Changing();
+            if (p5_1_player1.Text == username) p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Location = new Point(x, y1); }));
+            else if (p5_1_player2.Text == username) p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Location = new Point(x, y2); }));
+            else if (p5_1_player3.Text == username) p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Location = new Point(x, y3); }));
+            else if (p5_1_player4.Text == username) p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Location = new Point(x, y4); }));
+            else if (p5_1_player5.Text == username) p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Location = new Point(x, y5); }));
 
-            panel5_2_Owner_Wait.Invoke(new MethodInvoker(delegate { panel5_2_Owner_Wait.Visible = true; }));
-            p5_2_word_label.Invoke(new MethodInvoker(delegate { p5_2_word_label.Text = "정답 : " + p5_message_tbx.Text; }));
-        }
+            // p5_2
+            p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Visible = true; }));
 
+            if (p5_player1.Text == username) p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Location = new Point(x, y1); }));
+            else if (p5_2_player2.Text == username) p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Location = new Point(x, y2); }));
+            else if (p5_2_player3.Text == username) p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Location = new Point(x, y3); }));
+            else if (p5_2_player4.Text == username) p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Location = new Point(x, y4); }));
+            else if (p5_2_player5.Text == username) p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Location = new Point(x, y5); }));
 
-        /// <summary>
-        /// 게임 시작 후 출제자가 질문에 대한 답변을 작성하는 화면
-        /// </summary>
-        public override void PresenterAnswer()
-        {
-            Changing();
-            // RequestSendAnswer()를 보낼 수 있는 버튼 필요
-            panel5_1_Owner_Answer.Invoke(new MethodInvoker(delegate { panel5_1_Owner_Answer.Visible = true; }));
+            // p6
+            p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Visible = true; }));
 
-            // 제시어를 출제자 화면에는 보여줌
-            p5_1_answer_label.Invoke(new MethodInvoker(delegate { p5_1_answer_label.Text = p5_message_tbx.Text; }));
-        }
+            if (p6_player1.Text == username) p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Location = new Point(x, y1); }));
+            else if (p6_player2.Text == username) p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Location = new Point(x, y2); }));
+            else if (p6_player3.Text == username) p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Location = new Point(x, y3); }));
+            else if (p6_player4.Text == username) p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Location = new Point(x, y4); }));
+            else if (p6_player5.Text == username) p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Location = new Point(x, y5); }));
 
-
-        private void p5_1_yes_btn_Click(object sender, EventArgs e)
-        {
-            client.RequestSendAnswer("네");
-        }
-
-        private void p5_1_no_btn_Click(object sender, EventArgs e)
-        {
-            client.RequestSendAnswer("아니요");
-        }
-
-        private void p5_1_unknown_btn_Click(object sender, EventArgs e)
-        {
-            client.RequestSendAnswer("잘 모르겠습니다");
-        }
-
-        /// <summary>
-        /// 출제자 채팅 화면 클리어 & 자동 스크롤
-        /// </summary>
-        private void p5_1_QA_tbx_VisibleChanged(object sender, EventArgs e)
-        {
-            p5_1_QA_tbx.Invoke(new MethodInvoker(delegate {
-                p5_1_QA_tbx.AppendText("");
-                p5_1_QA_tbx.Select(p5_1_QA_tbx.Text.Length, 0); p5_1_QA_tbx.ScrollToCaret();
-            }));
-
-            p5_2_QA_tbx.Invoke(new MethodInvoker(delegate {
-                p5_2_QA_tbx.AppendText("");
-                p5_2_QA_tbx.Select(p5_2_QA_tbx.Text.Length, 0); p5_2_QA_tbx.ScrollToCaret();
-            }));
-        }
-
-        private void p5_2_QA_tbx_VisibleChanged(object sender, EventArgs e)
-        {
-            p5_1_QA_tbx.Invoke(new MethodInvoker(delegate {
-                p5_1_QA_tbx.AppendText("");
-                p5_1_QA_tbx.Select(p5_1_QA_tbx.Text.Length, 0); p5_1_QA_tbx.ScrollToCaret();
-            }));
-
-            p5_2_QA_tbx.Invoke(new MethodInvoker(delegate {
-                p5_2_QA_tbx.AppendText("");
-                p5_2_QA_tbx.Select(p5_2_QA_tbx.Text.Length, 0); p5_2_QA_tbx.ScrollToCaret();
-            }));
-        }
-
-
-        /// <summary>
-        /// 엔터 입력 이벤트 처리
-        /// </summary>
-        private void p5_message_tbx_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == Convert.ToChar(Keys.Enter))
-            {
-                e.Handled = true;
-                p5_input_label.Invoke(new MethodInvoker(delegate { p5_input_label.Text = p5_message_tbx.Text; }));
-                client.RequestWordSelect(p5_input_label.Text);
-            }
-        }
-
-        #endregion
-
-
-        #region 게임 진행 - panel6_Answer : 플레이어(정답자) 화면
-
-        public delegate void Delegateplus();
-
-        private void p6_2_turn()
-        {
+            // p6_2
             p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Visible = true; }));
+
+            if (p6_2_player1.Text == username) p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Location = new Point(x, y1); }));
+            else if (p6_2_player2.Text == username) p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Location = new Point(x, y2); }));
+            else if (p6_2_player3.Text == username) p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Location = new Point(x, y3); }));
+            else if (p6_2_player4.Text == username) p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Location = new Point(x, y4); }));
+            else if (p6_2_player5.Text == username) p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Location = new Point(x, y5); }));
+        }
+
+        bool buzzer_on = false;
+        int b_cnt1 = 5, b_cnt2 = 5, b_cnt3 = 5, b_cnt4 = 5, b_cnt5 = 5;
+        //정답 버튼
+   
+        public override void SetBcount(int count)
+        {
+            b_cnt1 = b_cnt2 = b_cnt3 = b_cnt4 = b_cnt5 = count+1;
+            buzzer_label_set();
+        }
+        static int btnstatus = 0;
+        public override void LockByBuzzer()
+        {
+            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Enabled = false; }));
+            p6_2_buzzer_btn.Invoke(new MethodInvoker(delegate { p6_2_buzzer_btn.Enabled = false; }));
+            p6_2_send_btn.Invoke(new MethodInvoker(delegate { p6_2_send_btn.Enabled = false; }));
+            p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.Enabled = false; }));
+            p6_buzzer_btn.Invoke(new MethodInvoker(delegate { p6_buzzer_btn.Enabled = false; }));
+            p6_send_btn.Invoke(new MethodInvoker(delegate { p6_send_btn.Enabled = false; }));
+        }
+        public override void UnlockByBuzzer()
+        {
+            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Enabled = true; }));
+            p6_2_buzzer_btn.Invoke(new MethodInvoker(delegate { p6_2_buzzer_btn.Enabled = true; }));
+            p6_2_send_btn.Invoke(new MethodInvoker(delegate { p6_2_send_btn.Enabled = true; }));
+            p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.Enabled = true; }));
+            p6_buzzer_btn.Invoke(new MethodInvoker(delegate { p6_buzzer_btn.Enabled = true; }));
+            p6_send_btn.Invoke(new MethodInvoker(delegate { p6_send_btn.Enabled = true; }));
+        }
+        private void buzzer_label_set()
+        {
             string p_name = p1_username_tbx.Text;
             if (p_name == p4_player1.Text)
-                p6_2_player_turn_label.Location = new Point(34, 23);
-            else if (p_name == p4_player2.Text)
-                p6_2_player_turn_label.Location = new Point(34, 114);
-            else if (p_name == p4_player3.Text)
-                p6_2_player_turn_label.Location = new Point(34, 204);
-            else if (p_name == p4_player4.Text)
-                p6_2_player_turn_label.Location = new Point(34, 294);
-            else if (p_name == p4_player5.Text)
-                p6_2_player_turn_label.Location = new Point(34, 384);
-        }
-
-        // 현재 사용자 표시 - 뒷 배경 초록색
-        private void p6_current_player()
-        {
-            string p_name = p1_username_tbx.Text;
-            if (p_name == p6_player1.Text)
-            {       //테두리 추가시, 사용자 이름이랑 뒷배경색 안 나옴
-                p6_player1.BackColor = Color.MediumSeaGreen;
-                p6_player1_score.BackColor = Color.MediumSeaGreen;
-            }
-            else if (p_name == p6_player2.Text)
             {
-                p6_player2.BackColor = Color.MediumSeaGreen;
-                p6_player2_score.BackColor = Color.MediumSeaGreen;
-            }
-            else if (p_name == p6_player3.Text)
-            {
-                p6_player3.BackColor = Color.MediumSeaGreen;
-                p6_player3_score.BackColor = Color.MediumSeaGreen;
-            }
-            else if (p_name == p6_player4.Text)
-            {
-                p6_player4.BackColor = Color.MediumSeaGreen;
-                p6_player4_score.BackColor = Color.MediumSeaGreen;
-            }
-            else if (p_name == p6_player5.Text)
-            {
-                p6_player5.BackColor = Color.MediumSeaGreen;
-                p6_player5_score.BackColor = Color.MediumSeaGreen;
-            }
-        }
-
-        private void p6_2_current_player()
-        {
-            string p_name = p1_username_tbx.Text;
-            if (p_name == p6_2_player1.Text)
-            {       //테두리 추가시, 사용자 이름이랑 뒷배경색 안 나옴
-                p6_2_player1.BackColor = Color.MediumSeaGreen;
-                p6_2_player1_score.BackColor = Color.MediumSeaGreen;
-            }
-            else if (p_name == p6_2_player2.Text)
-            {
-                p6_2_player2.BackColor = Color.MediumSeaGreen;
-                p6_2_player2_score.BackColor = Color.MediumSeaGreen;
-            }
-            else if (p_name == p6_2_player3.Text)
-            {
-                p6_2_player3.BackColor = Color.MediumSeaGreen;
-                p6_2_player3_score.BackColor = Color.MediumSeaGreen;
-            }
-            else if (p_name == p6_2_player4.Text)
-            {
-                p6_2_player4.BackColor = Color.MediumSeaGreen;
-                p6_2_player4_score.BackColor = Color.MediumSeaGreen;
-            }
-            else if (p_name == p6_2_player5.Text)
-            {
-                p6_2_player5.BackColor = Color.MediumSeaGreen;
-                p6_2_player5_score.BackColor = Color.MediumSeaGreen;
-            }
-        }
-
-        int turn_cnt = 0;   // 질문 횟수 계산
-
-        
-        private void p6_QA_tbx_VisibleChanged(object sender, EventArgs e)
-        {
-            p6_QA_tbx.Invoke(new MethodInvoker(delegate {
-                p6_QA_tbx.AppendText("");
-                p6_QA_tbx.Select(p6_QA_tbx.Text.Length, 0); p6_QA_tbx.ScrollToCaret();
-            }));
-
-        }
-
-        private void p6_2_QA_tbx_VisibleChanged(object sender, EventArgs e)
-        {
-            p6_2_QA_tbx.Invoke(new MethodInvoker(delegate {
-                p6_2_QA_tbx.AppendText(""); p6_2_QA_tbx.Select(p6_2_QA_tbx.Text.Length, 0);
-                p6_2_QA_tbx.ScrollToCaret();
-            }));
-        }
-
-        private void p6_2_send_btn_Click(object sender, EventArgs e)
-        {
-            if (buzzer_on)
-            {  // 부저 -> 정답 입력
-                client.RequestGuessAnswer(p6_2_answer_tbx.Text);
-                buzzer_on = false;
-                timer1.Stop();
-            }
-        }
-
-        private void p6_answer_tbx_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            // 엔터 입력 시 send 버튼 클릭과 같은 이벤트
-            if (e.KeyChar == Convert.ToChar(Keys.Enter))
-            {
-                e.Handled = true;
-                if (buzzer_on)
-                {  // 부저 -> 정답 입력
-                    client.RequestGuessAnswer(p6_answer_tbx.Text);
-                    buzzer_on = false;
-                    timer1.Stop();
+                b_cnt1--;
+                if (b_cnt1 <= 0)
+                {
+                    p6_buzzer_btn.Text = "정답 ( 0 / 5 )";
+                    p6_2_buzzer_btn.Text = "정답 ( 0 / 5 )";
                 }
-                else            // 일반 질문 입력
-                    client.RequestSendQuestion("[ " + turn_cnt + " ] " + p1_username_tbx.Text + " : " + p6_answer_tbx.Text);
-                p6_answer_tbx.Text = "";
+
+                else
+                {
+                    p6_buzzer_btn.Text = "정답 ( " + b_cnt1 + "/ 5 )";
+                    p6_2_buzzer_btn.Text = "정답 ( " + b_cnt1 + "/ 5 )";
+                }
             }
-
-        }
-
-        // 게임 시작 후 질문자가 질문을 기다리는 화면 > 턴x
-        public override void QuestionerWait()
-        {
-            Changing();
-
-            panel4_player_waitRoom.Invoke(new MethodInvoker(delegate { panel4_player_waitRoom.Visible = false; }));
-            panel6_Answer.Invoke(new MethodInvoker(delegate { panel6_Answer.Visible = false; }));
-            panel6_2_Answer_Wait.Invoke(new MethodInvoker(delegate { panel6_2_Answer_Wait.Visible = true; }));
-
-            // 타이머 안 보이게
-            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = false; }));
-            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = false; }));
-
-            //질의응답 창 test를 위해 주석 처리
-            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Text = "( 질문 순서가 아닙니다. )"; }));
-            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.ReadOnly = true; }));
-
-            if (turn_cnt >= 21)   // 질문 20번 넘었을 때
-                ShowMessageBox("질문 횟수가 20번이 넘었습니다...", "GameOver", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-        }
-
-
-        // 게임 시작 후 질문자가 질문을 작성하는 화면 > 턴o
-        public override void QuestionerQuestion()
-        {
-            Changing();
-            panel4_player_waitRoom.Invoke(new MethodInvoker(delegate { panel4_player_waitRoom.Visible = false; }));
-            panel6_2_Answer_Wait.Invoke(new MethodInvoker(delegate { panel6_2_Answer_Wait.Visible = false; }));
-            panel6_Answer.Invoke(new MethodInvoker(delegate { panel6_Answer.Visible = true; }));
-
-            // 타이머 안 보이게
-            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = false; }));
-            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = false; }));
-
-            //사용자 턴에 따른 사용자 리스트 라벨 변경 > 사용자 누구? -> 테두리 색 변환
-            if (turn_cnt < 20)
+            else if (p_name == p4_player2.Text)
             {
-                p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.Text = ""; }));
-                p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.ReadOnly = false; }));  // 입력 받기 가능
-
-                p6_answer_tbx.ForeColor = Color.DodgerBlue;
-                turn_cnt++;
+                b_cnt2--;
+                if (b_cnt2 <= 0)
+                {
+                    p6_buzzer_btn.Text = "정답 ( 0 / 5 )";
+                    p6_2_buzzer_btn.Text = "정답 ( 0 / 5 )";
+                }
+                else
+                {
+                    p6_buzzer_btn.Text = "정답 ( " + b_cnt2 + "/ 5 )";
+                    p6_2_buzzer_btn.Text = "정답 ( " + b_cnt2 + "/ 5 )";
+                }
             }
-            else
-            {   // 질문 20번 넘었을 때
-                ShowMessageBox("질문 횟수가 20번이 넘었습니다...", "GameOver", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+            else if (p_name == p4_player3.Text)
+            {
+                b_cnt3--;
+                if (b_cnt3 <= 0)
+                {
+                    p6_buzzer_btn.Text = "정답 ( 0 / 5 )";
+                    p6_2_buzzer_btn.Text = "정답 ( 0 / 5 )";
+                }
+                else
+                {
+                    p6_buzzer_btn.Text = "정답 ( " + b_cnt3 + "/ 5 )";
+                    p6_2_buzzer_btn.Text = "정답 ( " + b_cnt3 + "/ 5 )";
+                }
+            }
+            else if (p_name == p4_player4.Text)
+            {
+                b_cnt4--;
+                if (b_cnt4 <= 0)
+                {
+                    p6_buzzer_btn.Text = "정답 ( 0 / 5 )";
+                    p6_2_buzzer_btn.Text = "정답 ( 0 / 5 )";
+                }
+                else
+                {
+                    p6_buzzer_btn.Text = "정답 ( " + b_cnt4 + "/ 5 )";
+                    p6_2_buzzer_btn.Text = "정답 ( " + b_cnt4 + "/ 5 )";
+                }
+            }
+            else if (p_name == p4_player5.Text)
+            {
+                b_cnt5--;
+                if (b_cnt5 <= 0)
+                {
+                    p6_buzzer_btn.Text = "정답 ( 0 / 5 )";
+                    p6_2_buzzer_btn.Text = "정답 ( 0 / 5 )";
+                }
+                else
+                {
+                    p6_buzzer_btn.Text = "정답 ( " + b_cnt5 + "/ 5 )";
+                    p6_2_buzzer_btn.Text = "정답 ( " + b_cnt5 + "/ 5 )";
+                }
             }
         }
-
-
-        private void panel6_Answer_VisibleChanged(object sender, EventArgs e)
-        {   //질의응답 창 test를 위해 주석 처리
-            p6_solution_label.Invoke(new MethodInvoker(delegate { p6_solution_label.Text = "? ? ?"; }));
-            p6_answer_tbx.Text = "( 출제자가 답을 입력 중입니다. )";
-            p6_answer_tbx.ReadOnly = true;
-
-            this.ActiveControl = p6_answer_tbx; // 커서 포커스 설정
-        }
-
-        private void p6_send_btn_Click(object sender, EventArgs e)
+        private void buzzer_Click(object sender, EventArgs e)
         {
-            if (buzzer_on)
-            {  // 부저 -> 정답 입력
-                client.RequestGuessAnswer(p6_answer_tbx.Text);
+            buzzer_on = true;
+            if (b_cnt1 <= 0)
+            {
+                ShowMessageBox("부저 횟수 초과", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 buzzer_on = false;
-                timer1.Stop();
+                return;
             }
-            else            // 일반 질문 입력
-                client.RequestSendQuestion("[ " + p1_username_tbx.Text + " ] " + p6_answer_tbx.Text);
-            p6_answer_tbx.Text = "";
+            if (b_cnt2 <= 0)
+            {
+                ShowMessageBox("부저 횟수 초과", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                buzzer_on = false;
+                return;
+            }
+            if (b_cnt3 <= 0)
+            {
+                ShowMessageBox("부저 횟수 초과", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                buzzer_on = false; return;
+            }
+            if (b_cnt4 <= 0)
+            {
+                ShowMessageBox("부저 횟수 초과", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                buzzer_on = false; return;
+            }
+            if (b_cnt5 <= 0)
+            {
+                ShowMessageBox("부저 횟수 초과", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                buzzer_on = false; return;
+            }
+            //정답을 맞추는 사람만 라벨 변경 필요 > 출제자가 정답 전송 시 스코어 늘리기
+            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = true; }));
+            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = true; }));
+            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Text = "0"; }));
+            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Text = "0"; }));
+            timer1.Start();
+            client.RequestBuzzer();
+            
+
+            //폼을 정답 맞추는 것으로 바꿔야 함 - 턴 없애기, tbx 입력
+            //버저를 누른 유저에게만 해당하도록 설정 필요
+            p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Visible = false; }));
+            p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.ReadOnly = false; }));
+            p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.Text = ""; }));
+            p6_answer_tbx.ForeColor = Color.CornflowerBlue;
+
+            p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Visible = false; }));
+            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.ReadOnly = false; }));
+            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Text = ""; }));
+            p6_2_answer_tbx.ForeColor = Color.CornflowerBlue;
+
+            //부저 제한 횟수 넘길 시, 오류 출력 필요 > 사람마다 횟수 계산
+
+            buzzer_label_set();
         }
-        #endregion
+
+       
+        private void timer1_Tick(object sender, EventArgs e)
+        {   //시간 표시할 라벨     
+
+            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Text = (Convert.ToInt32(p6_timer_label.Text) + 1).ToString(); }));
+            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Text = (Convert.ToInt32(p6_timer_label.Text) + 1).ToString(); }));
+            if (p6_timer_label.Text == "5")
+            { 
+                buzzer_on=false;
+                timer1.Stop();
+                string ans=p6_answer_tbx.Text;
+                if (p6_2_answer_tbx.Visible)
+                    ans = p6_2_answer_tbx.Text;
+                client.RequestGuessAnswer(ans);  // 정답인지 확인
+                //답 읽어오기
+            }
+            
+        }
+
+        public override void RefreshWins(string wins_arr)
+        {
+            string[] strings = wins_arr.Split(',');
+            int[] score=new int[strings.Length];
+            for(int i=0;i<strings.Length; i++)
+            {
+                score[i] = Convert.ToInt32(strings[i]);
+            }
+            switch (score.Length-1)
+            {
+                case 4:
+                    p5_player5_score.Invoke(new MethodInvoker(delegate { p5_player5_score.Text = "점수 : " + score[4].ToString(); }));
+                    p5_1_player5_score.Invoke(new MethodInvoker(delegate { p5_1_player5_score.Text = "점수 : " + score[4].ToString(); }));
+                    p5_2_player5_score.Invoke(new MethodInvoker(delegate { p5_2_player5_score.Text = "점수 : " + score[4].ToString(); }));
+                    p6_2_player5_score.Invoke(new MethodInvoker(delegate { p6_2_player5_score.Text = "점수 : " + score[4].ToString(); }));
+                    p6_player5_score.Invoke(new MethodInvoker(delegate { p6_player5_score.Text = "점수 : " + score[4].ToString(); }));
+                    goto case 0;
+                case 3:
+                    p5_player4_score.Invoke(new MethodInvoker(delegate { p5_player4_score.Text = "점수 : " + score[3].ToString(); }));
+                    p5_1_player4_score.Invoke(new MethodInvoker(delegate { p5_1_player4_score.Text = "점수 : " + score[3].ToString(); }));
+                    p5_2_player4_score.Invoke(new MethodInvoker(delegate { p5_2_player4_score.Text = "점수 : " + score[3].ToString(); }));
+                    p6_2_player4_score.Invoke(new MethodInvoker(delegate { p6_2_player4_score.Text = "점수 : " + score[3].ToString(); }));
+                    p6_player4_score.Invoke(new MethodInvoker(delegate { p6_player4_score.Text = "점수 : " + score[3].ToString(); }));
+                    goto case 2;
+                case 2:
+                    p5_player3_score.Invoke(new MethodInvoker(delegate { p5_player3_score.Text = "점수 : " + score[2].ToString(); }));
+                    p5_1_player3_score.Invoke(new MethodInvoker(delegate { p5_1_player3_score.Text = "점수 : " + score[2].ToString(); }));
+                    p5_2_player3_score.Invoke(new MethodInvoker(delegate { p5_2_player3_score.Text = "점수 : " + score[2].ToString(); }));
+                    p6_2_player3_score.Invoke(new MethodInvoker(delegate { p6_2_player3_score.Text = "점수 : " + score[2].ToString(); }));
+                    p6_player3_score.Invoke(new MethodInvoker(delegate { p6_player3_score.Text = "점수 : " + score[2].ToString(); }));
+                    goto case 1;
+                case 1:
+                    p5_player2_score.Invoke(new MethodInvoker(delegate { p5_player2_score.Text = "점수 : " + score[1].ToString(); }));
+                    p5_1_player2_score.Invoke(new MethodInvoker(delegate { p5_1_player2_score.Text = "점수 : " + score[1].ToString(); }));
+                    p5_2_player2_score.Invoke(new MethodInvoker(delegate { p5_2_player2_score.Text = "점수 : " + score[1].ToString(); }));
+                    p6_2_player2_score.Invoke(new MethodInvoker(delegate { p6_2_player2_score.Text = "점수 : " + score[1].ToString(); }));
+                    p6_player2_score.Invoke(new MethodInvoker(delegate { p6_player2_score.Text = "점수 : " + score[1].ToString(); }));
+                    goto case 0;
+                case 0:
+                    p5_player1_score.Invoke(new MethodInvoker(delegate { p5_player1_score.Text = "점수 : " + score[0].ToString(); }));
+                    p5_1_player1_score.Invoke(new MethodInvoker(delegate { p5_1_player1_score.Text = "점수 : " + score[0].ToString(); }));
+                    p5_2_player1_score.Invoke(new MethodInvoker(delegate { p5_2_player1_score.Text = "점수 : " + score[0].ToString(); }));
+                    p6_2_player1_score.Invoke(new MethodInvoker(delegate { p6_2_player1_score.Text = "점수 : " + score[0].ToString(); }));
+                    p6_player1_score.Invoke(new MethodInvoker(delegate { p6_player1_score.Text = "점수 : " + score[0].ToString();}));
+                    break;
+            }
+
+        }
 
 
-        #region panel7_Rank : 랭킹
+        #region 랭킹
         public override void Ranking(string rank_arr)
         {
             p7_ranking_dgv.Invoke(new MethodInvoker(delegate { p7_ranking_dgv.Rows.Clear(); }));
@@ -1993,16 +2019,8 @@ namespace client
         {
             panel7_rank.Invoke(new MethodInvoker(delegate { panel7_rank.Visible = false; }));
             panel3_roomList.Invoke(new MethodInvoker(delegate { panel3_roomList.Visible = true; }));
-            p3_people_label.Visible = false;
-            p3_people_tbx.Visible = false;
-            p3_create_btn.Visible = false;
-            p3_roomname_label.Visible = false;
-            p3_roomname_tbx.Visible = false;
         }
 
-        /// <summary>
-        /// 랭킹 보기
-        /// </summary>
         private void p3_rank_btn_Click(object sender, EventArgs e)
         {
             client.RequestGetRank();
@@ -2011,8 +2029,7 @@ namespace client
         }
         #endregion
 
-
-        #region panel8_Friend : 친구 목록
+        #region 친구 목록
 
         public override void FriendList(List<string> friendList)
         {
@@ -2096,11 +2113,11 @@ namespace client
             if (sucess == true)
             {
                 client.RequestFirendsList();
-                ShowMessageBox("친구가 삭제 되었습니다.", "Delete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ShowMessageBox("삭제", "1", MessageBoxButtons.OK, MessageBoxIcon.None);
             }
             else
             {
-                ShowMessageBox("친구가 삭제 되지 않았습니다.", "Not Delete", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ShowMessageBox("삭제노노", "1", MessageBoxButtons.OK, MessageBoxIcon.None);
             }
         }
 
@@ -2186,19 +2203,17 @@ namespace client
 
 
 
-        #region 부저
-        bool buzzer_on = false;
-        int b_cnt1 = 5, b_cnt2 = 5, b_cnt3 = 5, b_cnt4 = 5, b_cnt5 = 5;
-        //정답 버튼
+        #region 게임 진행 - panel5_Owner, 5_1_Owner_Answer, 5_2_Owner_Wait : 출제자 화면
 
-        public override void SetBcount(int count)
+        private void p5_send_btn_Click(object sender, EventArgs e)
         {
-            b_cnt1 = b_cnt2 = b_cnt3 = b_cnt4 = b_cnt5 = count + 1;
-            buzzer_label_set();
+            // presenterchoice 화면과 연결됨 -> panel 5
+            p5_input_label.Invoke(new MethodInvoker(delegate { p5_input_label.Text = p5_message_tbx.Text; }));
+            client.RequestWordSelect(p5_input_label.Text);
         }
-        static int btnstatus = 0;
-        
-        public override void LockByBuzzer()
+
+        // 게임 시작 후 출제자가 제시어 정하는 화면
+        public override void PresenterChoice()
         {
             Changing();
             // RequestWordSelect() 을 보낼 수 있는 버튼 필요 -> send 버튼으로 지정
@@ -2206,159 +2221,209 @@ namespace client
             p5_message_tbx.Invoke(new MethodInvoker(delegate { p5_message_tbx.Text = ""; }));
             panel5_Owner.Invoke(new MethodInvoker(delegate { panel5_Owner.Visible = true; }));
             p6_2_solution_label.Invoke(new MethodInvoker(delegate { p6_2_solution_label.Text = "입력 중..."; }));
-            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Enabled = false; }));
-            p6_2_buzzer_btn.Invoke(new MethodInvoker(delegate { p6_2_buzzer_btn.Enabled = false; }));
-            p6_2_send_btn.Invoke(new MethodInvoker(delegate { p6_2_send_btn.Enabled = false; }));
-            p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.Enabled = false; }));
-            p6_buzzer_btn.Invoke(new MethodInvoker(delegate { p6_buzzer_btn.Enabled = false; }));
-            p6_send_btn.Invoke(new MethodInvoker(delegate { p6_send_btn.Enabled = false; }));
         }
-        
-        public override void UnlockByBuzzer()
+
+        // 게임 시작 후 출제자가 질문을 기다리는 화면
+        public override void PresenterWait()
         {
-            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Enabled = true; }));
-            p6_2_buzzer_btn.Invoke(new MethodInvoker(delegate { p6_2_buzzer_btn.Enabled = true; }));
-            p6_2_send_btn.Invoke(new MethodInvoker(delegate { p6_2_send_btn.Enabled = true; }));
-            p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.Enabled = true; }));
-            p6_buzzer_btn.Invoke(new MethodInvoker(delegate { p6_buzzer_btn.Enabled = true; }));
-            p6_send_btn.Invoke(new MethodInvoker(delegate { p6_send_btn.Enabled = true; }));
+            Changing();
+
+            panel5_2_Owner_Wait.Invoke(new MethodInvoker(delegate { panel5_2_Owner_Wait.Visible = true; }));
+            p5_2_word_label.Invoke(new MethodInvoker(delegate { p5_2_word_label.Text = "정답 : " + p5_message_tbx.Text; }));
         }
-        
-        private void buzzer_label_set()
-        {
-            string p_name = p1_username_tbx.Text;
-            if (p_name == p4_player1.Text)
-            {
-                b_cnt1--;
-                if (b_cnt1 <= 0)
-                {
-                    p6_buzzer_btn.Text = "정답 ( 0 / 5 )";
-                    p6_2_buzzer_btn.Text = "정답 ( 0 / 5 )";
-                }
 
-                else
-                {
-                    p6_buzzer_btn.Text = "정답 ( " + b_cnt1 + "/ 5 )";
-                    p6_2_buzzer_btn.Text = "정답 ( " + b_cnt1 + "/ 5 )";
-                }
-            }
-            else if (p_name == p4_player2.Text)
-            {
-                b_cnt2--;
-                if (b_cnt2 <= 0)
-                {
-                    p6_buzzer_btn.Text = "정답 ( 0 / 5 )";
-                    p6_2_buzzer_btn.Text = "정답 ( 0 / 5 )";
-                }
-                else
-                {
-                    p6_buzzer_btn.Text = "정답 ( " + b_cnt2 + "/ 5 )";
-                    p6_2_buzzer_btn.Text = "정답 ( " + b_cnt2 + "/ 5 )";
-                }
-            }
-            else if (p_name == p4_player3.Text)
-            {
-                b_cnt3--;
-                if (b_cnt3 <= 0)
-                {
-                    p6_buzzer_btn.Text = "정답 ( 0 / 5 )";
-                    p6_2_buzzer_btn.Text = "정답 ( 0 / 5 )";
-                }
-                else
-                {
-                    p6_buzzer_btn.Text = "정답 ( " + b_cnt3 + "/ 5 )";
-                    p6_2_buzzer_btn.Text = "정답 ( " + b_cnt3 + "/ 5 )";
-                }
-            }
-            else if (p_name == p4_player4.Text)
-            {
-                b_cnt4--;
-                if (b_cnt4 <= 0)
-                {
-                    p6_buzzer_btn.Text = "정답 ( 0 / 5 )";
-                    p6_2_buzzer_btn.Text = "정답 ( 0 / 5 )";
-                }
-                else
-                {
-                    p6_buzzer_btn.Text = "정답 ( " + b_cnt4 + "/ 5 )";
-                    p6_2_buzzer_btn.Text = "정답 ( " + b_cnt4 + "/ 5 )";
-                }
-            }
-            else if (p_name == p4_player5.Text)
-            {
-                b_cnt5--;
-                if (b_cnt5 <= 0)
-                {
-                    p6_buzzer_btn.Text = "정답 ( 0 / 5 )";
-                    p6_2_buzzer_btn.Text = "정답 ( 0 / 5 )";
-                }
-                else
-                {
-                    p6_buzzer_btn.Text = "정답 ( " + b_cnt5 + "/ 5 )";
-                    p6_2_buzzer_btn.Text = "정답 ( " + b_cnt5 + "/ 5 )";
-                }
-            }
+        // 게임 시작 후 출제자가 질문에 대한 답변을 작성하는 화면
+        public override void PresenterAnswer()
+        {
+            Changing();
+            // RequestSendAnswer()를 보낼 수 있는 버튼 필요
+            panel5_1_Owner_Answer.Invoke(new MethodInvoker(delegate { panel5_1_Owner_Answer.Visible = true; }));
+
+            // 제시어를 출제자 화면에는 보여줌
+            p5_1_answer_label.Invoke(new MethodInvoker(delegate { p5_1_answer_label.Text = p5_message_tbx.Text; }));
         }
-        
-        private void buzzer_Click(object sender, EventArgs e)
+
+        private void p5_1_yes_btn_Click(object sender, EventArgs e)
         {
-            buzzer_on = true;
-            if (b_cnt1 <= 0)
-            {
-                ShowMessageBox("부저 횟수 초과", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                buzzer_on = false;
-                return;
-            }
-            if (b_cnt2 <= 0)
-            {
-                ShowMessageBox("부저 횟수 초과", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                buzzer_on = false;
-                return;
-            }
-            if (b_cnt3 <= 0)
-            {
-                ShowMessageBox("부저 횟수 초과", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                buzzer_on = false; return;
-            }
-            if (b_cnt4 <= 0)
-            {
-                ShowMessageBox("부저 횟수 초과", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                buzzer_on = false; return;
-            }
-            if (b_cnt5 <= 0)
-            {
-                ShowMessageBox("부저 횟수 초과", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                buzzer_on = false; return;
-            }
-            //정답을 맞추는 사람만 라벨 변경 필요 > 출제자가 정답 전송 시 스코어 늘리기
-            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = true; }));
-            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = true; }));
-            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Text = "0"; }));
-            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Text = "0"; }));
-            timer1.Start();
-            client.RequestBuzzer();
+            client.RequestSendAnswer("네");
+        }
 
+        private void p5_1_no_btn_Click(object sender, EventArgs e)
+        {
+            client.RequestSendAnswer("아니요");
+        }
 
-            //폼을 정답 맞추는 것으로 바꿔야 함 - 턴 없애기, tbx 입력
-            //버저를 누른 유저에게만 해당하도록 설정 필요
-            p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Visible = false; }));
-            p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.ReadOnly = false; }));
-            p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.Text = ""; }));
-            p6_answer_tbx.ForeColor = Color.CornflowerBlue;
-
-            p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Visible = false; }));
-            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.ReadOnly = false; }));
-            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Text = ""; }));
-            p6_2_answer_tbx.ForeColor = Color.CornflowerBlue;
-
-            //부저 제한 횟수 넘길 시, 오류 출력 필요 > 사람마다 횟수 계산
-
-            buzzer_label_set();
+        private void p5_1_unknown_btn_Click(object sender, EventArgs e)
+        {
+            client.RequestSendAnswer("잘 모르겠습니다");
         }
         #endregion
 
+        #region 게임 진행 - panel6_Answer : 플레이어(정답자) 화면
 
-        #region 기타 (타이머, 여러 기능 & 함수들)
+        public delegate void Delegateplus();
+
+        private void p6_2_turn()
+        {
+            p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Visible = true; }));
+            string p_name = p1_username_tbx.Text;
+            if (p_name == p4_player1.Text)
+                p6_2_player_turn_label.Location = new Point(34, 23);
+            else if (p_name == p4_player2.Text)
+                p6_2_player_turn_label.Location = new Point(34, 114);
+            else if (p_name == p4_player3.Text)
+                p6_2_player_turn_label.Location = new Point(34, 204);
+            else if (p_name == p4_player4.Text)
+                p6_2_player_turn_label.Location = new Point(34, 294);
+            else if (p_name == p4_player5.Text)
+                p6_2_player_turn_label.Location = new Point(34, 384);
+        }
+
+        // 현재 사용자 표시 - 뒷 배경 초록색
+        private void p6_current_player()
+        {
+            string p_name = p1_username_tbx.Text;
+            if (p_name == p6_player1.Text)
+            {       //테두리 추가시, 사용자 이름이랑 뒷배경색 안 나옴
+                p6_player1.BackColor = Color.MediumSeaGreen;
+                p6_player1_score.BackColor = Color.MediumSeaGreen;
+            }
+            else if (p_name == p6_player2.Text)
+            {
+                p6_player2.BackColor = Color.MediumSeaGreen;
+                p6_player2_score.BackColor = Color.MediumSeaGreen;
+            }
+            else if (p_name == p6_player3.Text)
+            {
+                p6_player3.BackColor = Color.MediumSeaGreen;
+                p6_player3_score.BackColor = Color.MediumSeaGreen;
+            }
+            else if (p_name == p6_player4.Text)
+            {
+                p6_player4.BackColor = Color.MediumSeaGreen;
+                p6_player4_score.BackColor = Color.MediumSeaGreen;
+            }
+            else if (p_name == p6_player5.Text)
+            {
+                p6_player5.BackColor = Color.MediumSeaGreen;
+                p6_player5_score.BackColor = Color.MediumSeaGreen;
+            }
+        }
+
+        private void p6_2_current_player()
+        {
+            string p_name = p1_username_tbx.Text;
+            if (p_name == p6_2_player1.Text)
+            {       //테두리 추가시, 사용자 이름이랑 뒷배경색 안 나옴
+                p6_2_player1.BackColor = Color.MediumSeaGreen;
+                p6_2_player1_score.BackColor = Color.MediumSeaGreen;
+            }
+            else if (p_name == p6_2_player2.Text)
+            {
+                p6_2_player2.BackColor = Color.MediumSeaGreen;
+                p6_2_player2_score.BackColor = Color.MediumSeaGreen;
+            }
+            else if (p_name == p6_2_player3.Text)
+            {
+                p6_2_player3.BackColor = Color.MediumSeaGreen;
+                p6_2_player3_score.BackColor = Color.MediumSeaGreen;
+            }
+            else if (p_name == p6_2_player4.Text)
+            {
+                p6_2_player4.BackColor = Color.MediumSeaGreen;
+                p6_2_player4_score.BackColor = Color.MediumSeaGreen;
+            }
+            else if (p_name == p6_2_player5.Text)
+            {
+                p6_2_player5.BackColor = Color.MediumSeaGreen;
+                p6_2_player5_score.BackColor = Color.MediumSeaGreen;
+            }
+        }
+
+        int turn_cnt = 0;   // 질문 횟수 계산
+
+        // 자동 스크롤
+        private void p5_1_QA_tbx_VisibleChanged(object sender, EventArgs e)
+        {
+            p5_1_QA_tbx.Invoke(new MethodInvoker(delegate {
+                p5_1_QA_tbx.AppendText("");
+                p5_1_QA_tbx.Select(p5_1_QA_tbx.Text.Length, 0); p5_1_QA_tbx.ScrollToCaret();
+            }));
+
+            p5_2_QA_tbx.Invoke(new MethodInvoker(delegate {
+                p5_2_QA_tbx.AppendText("");
+                p5_2_QA_tbx.Select(p5_2_QA_tbx.Text.Length, 0); p5_2_QA_tbx.ScrollToCaret();
+            }));
+        }
+
+        private void p5_2_QA_tbx_VisibleChanged(object sender, EventArgs e)
+        {
+            p5_1_QA_tbx.Invoke(new MethodInvoker(delegate {
+                p5_1_QA_tbx.AppendText("");
+                p5_1_QA_tbx.Select(p5_1_QA_tbx.Text.Length, 0); p5_1_QA_tbx.ScrollToCaret();
+            }));
+
+            p5_2_QA_tbx.Invoke(new MethodInvoker(delegate {
+                p5_2_QA_tbx.AppendText("");
+                p5_2_QA_tbx.Select(p5_2_QA_tbx.Text.Length, 0); p5_2_QA_tbx.ScrollToCaret();
+            }));
+        }
+
+        private void p6_QA_tbx_VisibleChanged(object sender, EventArgs e)
+        {
+            p6_QA_tbx.Invoke(new MethodInvoker(delegate {
+                p6_QA_tbx.AppendText("");
+                p6_QA_tbx.Select(p6_QA_tbx.Text.Length, 0); p6_QA_tbx.ScrollToCaret();
+            }));
+   
+        }
+
+        private void p6_2_QA_tbx_VisibleChanged(object sender, EventArgs e)
+        {
+            p6_2_QA_tbx.Invoke(new MethodInvoker(delegate {
+                p6_2_QA_tbx.AppendText(""); p6_2_QA_tbx.Select(p6_2_QA_tbx.Text.Length, 0);
+                p6_2_QA_tbx.ScrollToCaret();
+            }));
+        }
+
+        private void p6_2_send_btn_Click(object sender, EventArgs e)
+        {
+            if (buzzer_on)
+            {  // 부저 -> 정답 입력
+                client.RequestGuessAnswer(p6_2_answer_tbx.Text);
+                buzzer_on = false;
+                timer1.Stop();
+            }
+        }
+
+        private void p6_answer_tbx_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // 엔터 입력 시 send 버튼 클릭과 같은 이벤트
+            if (e.KeyChar == Convert.ToChar(Keys.Enter))
+            {
+                e.Handled = true;
+                if (buzzer_on)
+                {  // 부저 -> 정답 입력
+                    client.RequestGuessAnswer(p6_answer_tbx.Text);
+                    buzzer_on = false;
+                    timer1.Stop();
+                }
+                else            // 일반 질문 입력
+                    client.RequestSendQuestion("[ " + turn_cnt + " ] " + p1_username_tbx.Text + " : " + p6_answer_tbx.Text);
+                p6_answer_tbx.Text = "";
+            }
+
+        }
+
+        private void p5_message_tbx_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == Convert.ToChar(Keys.Enter))
+            {
+                e.Handled = true;
+                p5_input_label.Invoke(new MethodInvoker(delegate { p5_input_label.Text = p5_message_tbx.Text; }));
+                client.RequestWordSelect(p5_input_label.Text);
+            }
+        }
 
         private void timer2_Tick(object sender, EventArgs e)
         {
@@ -2373,9 +2438,8 @@ namespace client
             p4_player4_ballon.Invoke(new MethodInvoker(delegate { p4_player4_ballon.Visible = false; }));
             p4_player5_ballon.Invoke(new MethodInvoker(delegate { p4_player5_ballon.Visible = false; }));
             timer2.Stop();
-
+            
         }
-
 
         private void p4_1_player1_ballon_VisibleChanged(object sender, EventArgs e)
         {
@@ -2389,212 +2453,96 @@ namespace client
             p4_player3_ballon.Invoke(new MethodInvoker(delegate { p4_player3_ballon.BringToFront(); }));
             p4_player4_ballon.Invoke(new MethodInvoker(delegate { p4_player4_ballon.BringToFront(); }));
             p4_player5_ballon.Invoke(new MethodInvoker(delegate { p4_player5_ballon.BringToFront(); }));
-            if (p4_1_player1_ballon.Visible || p4_1_player2_ballon.Visible || p4_1_player3_ballon.Visible ||
+            if (p4_1_player1_ballon.Visible||p4_1_player2_ballon.Visible|| p4_1_player3_ballon.Visible ||
                 p4_1_player4_ballon.Visible || p4_1_player5_ballon.Visible || p4_player1_ballon.Visible ||
                 p4_player2_ballon.Visible || p4_player3_ballon.Visible || p4_player4_ballon.Visible ||
                 p4_player5_ballon.Visible)
             {
                 timer2.Start();
             }
-
+       
         }
 
-        /// <summary>
-        /// 정답 맞추는 타이머 제한 함수
-        /// </summary>
-        private void timer1_Tick(object sender, EventArgs e)
-        {   //시간 표시할 라벨     
-            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Text = (Convert.ToInt32(p6_timer_label.Text) + 1).ToString(); }));
-            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Text = (Convert.ToInt32(p6_timer_label.Text) + 1).ToString(); }));
-            if (p6_timer_label.Text == "5")
+
+
+
+        // 게임 시작 후 질문자가 질문을 기다리는 화면 > 턴x
+        public override void QuestionerWait()
+        {
+            Changing();
+            
+            panel4_player_waitRoom.Invoke(new MethodInvoker(delegate { panel4_player_waitRoom.Visible = false; }));
+            panel6_Answer.Invoke(new MethodInvoker(delegate { panel6_Answer.Visible = false; }));
+            panel6_2_Answer_Wait.Invoke(new MethodInvoker(delegate { panel6_2_Answer_Wait.Visible = true; }));
+
+            // 타이머 안 보이게
+            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = false; }));
+            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = false; }));
+
+            //질의응답 창 test를 위해 주석 처리
+            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Text = "( 질문 순서가 아닙니다. )"; }));
+            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.ReadOnly = true; }));
+
+            if(turn_cnt >= 21)   // 질문 20번 넘었을 때
+                ShowMessageBox("질문 횟수가 20번이 넘었습니다...", "GameOver", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+        }
+
+        // 게임 시작 후 질문자가 질문을 작성하는 화면 > 턴o
+        public override void QuestionerQuestion()
+        {
+            Changing();
+            panel4_player_waitRoom.Invoke(new MethodInvoker(delegate { panel4_player_waitRoom.Visible = false; }));
+            panel6_2_Answer_Wait.Invoke(new MethodInvoker(delegate { panel6_2_Answer_Wait.Visible = false; }));
+            panel6_Answer.Invoke(new MethodInvoker(delegate { panel6_Answer.Visible = true; }));
+
+            // 타이머 안 보이게
+            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = false; }));
+            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = false; }));
+
+            //사용자 턴에 따른 사용자 리스트 라벨 변경 > 사용자 누구? -> 테두리 색 변환
+            if (turn_cnt < 20)
             {
-                buzzer_on = false;
+                p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.Text = ""; }));
+                p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.ReadOnly = false; }));  // 입력 받기 가능
+
+                p6_answer_tbx.ForeColor = Color.DodgerBlue;
+                turn_cnt++;
+            }
+            else
+            {   // 질문 20번 넘었을 때
+                ShowMessageBox("질문 횟수가 20번이 넘었습니다...", "GameOver", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+            }
+        }
+
+        private void panel6_Answer_VisibleChanged(object sender, EventArgs e)
+        {   //질의응답 창 test를 위해 주석 처리
+            p6_solution_label.Invoke(new MethodInvoker(delegate { p6_solution_label.Text = "? ? ?"; }));
+            p6_answer_tbx.Text = "( 출제자가 답을 입력 중입니다. )";
+            p6_answer_tbx.ReadOnly = true;
+        }
+
+        private void p6_send_btn_Click(object sender, EventArgs e)
+        {
+            if (buzzer_on)
+            {  // 부저 -> 정답 입력
+                client.RequestGuessAnswer(p6_answer_tbx.Text);
+                buzzer_on=false;
                 timer1.Stop();
-                string ans = p6_answer_tbx.Text;
-                if (p6_2_answer_tbx.Visible)
-                    ans = p6_2_answer_tbx.Text;
-                client.RequestGuessAnswer(ans);  // 정답인지 확인
             }
+            else            // 일반 질문 입력
+                client.RequestSendQuestion("[ " + p1_username_tbx.Text + " ] " + p6_answer_tbx.Text);
+            p6_answer_tbx.Text = "";
         }
-
-        /// <summary>
-        /// 현재 스코어 라벨에 표시하는 함수
-        /// </summary>
-        public override void RefreshWins(string wins_arr)
-        {
-            string[] strings = wins_arr.Split(',');
-            int[] score = new int[strings.Length];
-            for (int i = 0; i < strings.Length; i++)
-            {
-                score[i] = Convert.ToInt32(strings[i]);
-            }
-            switch (score.Length - 1)
-            {
-                case 4:
-                    p5_player5_score.Invoke(new MethodInvoker(delegate { p5_player5_score.Text = "점수 : " + score[4].ToString(); }));
-                    p5_1_player5_score.Invoke(new MethodInvoker(delegate { p5_1_player5_score.Text = "점수 : " + score[4].ToString(); }));
-                    p5_2_player5_score.Invoke(new MethodInvoker(delegate { p5_2_player5_score.Text = "점수 : " + score[4].ToString(); }));
-                    p6_2_player5_score.Invoke(new MethodInvoker(delegate { p6_2_player5_score.Text = "점수 : " + score[4].ToString(); }));
-                    p6_player5_score.Invoke(new MethodInvoker(delegate { p6_player5_score.Text = "점수 : " + score[4].ToString(); }));
-                    goto case 0;
-                case 3:
-                    p5_player4_score.Invoke(new MethodInvoker(delegate { p5_player4_score.Text = "점수 : " + score[3].ToString(); }));
-                    p5_1_player4_score.Invoke(new MethodInvoker(delegate { p5_1_player4_score.Text = "점수 : " + score[3].ToString(); }));
-                    p5_2_player4_score.Invoke(new MethodInvoker(delegate { p5_2_player4_score.Text = "점수 : " + score[3].ToString(); }));
-                    p6_2_player4_score.Invoke(new MethodInvoker(delegate { p6_2_player4_score.Text = "점수 : " + score[3].ToString(); }));
-                    p6_player4_score.Invoke(new MethodInvoker(delegate { p6_player4_score.Text = "점수 : " + score[3].ToString(); }));
-                    goto case 2;
-                case 2:
-                    p5_player3_score.Invoke(new MethodInvoker(delegate { p5_player3_score.Text = "점수 : " + score[2].ToString(); }));
-                    p5_1_player3_score.Invoke(new MethodInvoker(delegate { p5_1_player3_score.Text = "점수 : " + score[2].ToString(); }));
-                    p5_2_player3_score.Invoke(new MethodInvoker(delegate { p5_2_player3_score.Text = "점수 : " + score[2].ToString(); }));
-                    p6_2_player3_score.Invoke(new MethodInvoker(delegate { p6_2_player3_score.Text = "점수 : " + score[2].ToString(); }));
-                    p6_player3_score.Invoke(new MethodInvoker(delegate { p6_player3_score.Text = "점수 : " + score[2].ToString(); }));
-                    goto case 1;
-                case 1:
-                    p5_player2_score.Invoke(new MethodInvoker(delegate { p5_player2_score.Text = "점수 : " + score[1].ToString(); }));
-                    p5_1_player2_score.Invoke(new MethodInvoker(delegate { p5_1_player2_score.Text = "점수 : " + score[1].ToString(); }));
-                    p5_2_player2_score.Invoke(new MethodInvoker(delegate { p5_2_player2_score.Text = "점수 : " + score[1].ToString(); }));
-                    p6_2_player2_score.Invoke(new MethodInvoker(delegate { p6_2_player2_score.Text = "점수 : " + score[1].ToString(); }));
-                    p6_player2_score.Invoke(new MethodInvoker(delegate { p6_player2_score.Text = "점수 : " + score[1].ToString(); }));
-                    goto case 0;
-                case 0:
-                    p5_player1_score.Invoke(new MethodInvoker(delegate { p5_player1_score.Text = "점수 : " + score[0].ToString(); }));
-                    p5_1_player1_score.Invoke(new MethodInvoker(delegate { p5_1_player1_score.Text = "점수 : " + score[0].ToString(); }));
-                    p5_2_player1_score.Invoke(new MethodInvoker(delegate { p5_2_player1_score.Text = "점수 : " + score[0].ToString(); }));
-                    p6_2_player1_score.Invoke(new MethodInvoker(delegate { p6_2_player1_score.Text = "점수 : " + score[0].ToString(); }));
-                    p6_player1_score.Invoke(new MethodInvoker(delegate { p6_player1_score.Text = "점수 : " + score[0].ToString(); }));
-                    break;
-            }
-
-        }
-
-
-        /// <summary>
-        /// 질문자가 바뀔 때 자동으로 호출되는 함수
-        /// </summary>
-        public override void CurrentQuestioner(string username)
-        {
-            // 상태 라벨 true로 하기
-            p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Visible = true; }));
-
-            // 패널 안이라 위치에 차이가 있음 > player 라벨과 차이로 계산하여 다시 위치 설정
-            int x = p5_1_player1.Location.X - 7;
-            int y1 = p5_1_player1.Location.Y - 7;
-            int y2 = p5_1_player2.Location.Y - 6;
-            int y3 = p5_1_player3.Location.Y - 6;
-            int y4 = p5_1_player4.Location.Y - 6;
-            int y5 = p5_1_player5.Location.Y - 6;
-
-            // turn 위치로 이동
-            // p5 
-            if (p5_player1.Text == username) p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Location = new Point(x, y1); }));
-            else if (p5_player2.Text == username) p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Location = new Point(x, y2); }));
-            else if (p5_player3.Text == username) p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Location = new Point(x, y3); }));
-            else if (p5_player4.Text == username) p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Location = new Point(x, y4); }));
-            else if (p5_player5.Text == username) p5_player_turn_label.Invoke(new MethodInvoker(delegate { p5_player_turn_label.Location = new Point(x, y5); }));
-
-            // p5_1
-            p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Visible = true; }));
-
-            if (p5_1_player1.Text == username) p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Location = new Point(x, y1); }));
-            else if (p5_1_player2.Text == username) p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Location = new Point(x, y2); }));
-            else if (p5_1_player3.Text == username) p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Location = new Point(x, y3); }));
-            else if (p5_1_player4.Text == username) p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Location = new Point(x, y4); }));
-            else if (p5_1_player5.Text == username) p5_1_player_turn_label.Invoke(new MethodInvoker(delegate { p5_1_player_turn_label.Location = new Point(x, y5); }));
-
-            // p5_2
-            p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Visible = true; }));
-
-            if (p5_player1.Text == username) p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Location = new Point(x, y1); }));
-            else if (p5_2_player2.Text == username) p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Location = new Point(x, y2); }));
-            else if (p5_2_player3.Text == username) p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Location = new Point(x, y3); }));
-            else if (p5_2_player4.Text == username) p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Location = new Point(x, y4); }));
-            else if (p5_2_player5.Text == username) p5_2_player_turn_label.Invoke(new MethodInvoker(delegate { p5_2_player_turn_label.Location = new Point(x, y5); }));
-
-            // p6
-            p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Visible = true; }));
-
-            if (p6_player1.Text == username) p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Location = new Point(x, y1); }));
-            else if (p6_player2.Text == username) p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Location = new Point(x, y2); }));
-            else if (p6_player3.Text == username) p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Location = new Point(x, y3); }));
-            else if (p6_player4.Text == username) p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Location = new Point(x, y4); }));
-            else if (p6_player5.Text == username) p6_player_turn_label.Invoke(new MethodInvoker(delegate { p6_player_turn_label.Location = new Point(x, y5); }));
-
-            // p6_2
-            p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Visible = true; }));
-
-            if (p6_2_player1.Text == username) p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Location = new Point(x, y1); }));
-            else if (p6_2_player2.Text == username) p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Location = new Point(x, y2); }));
-            else if (p6_2_player3.Text == username) p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Location = new Point(x, y3); }));
-            else if (p6_2_player4.Text == username) p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Location = new Point(x, y4); }));
-            else if (p6_2_player5.Text == username) p6_2_player_turn_label.Invoke(new MethodInvoker(delegate { p6_2_player_turn_label.Location = new Point(x, y5); }));
-        }
-
-
-        /// <summary>
-        /// 귓속말 기능
-        /// </summary>
-        public override void Whisper(string msg)
-        {
-
-            int sender = Convert.ToInt32(msg.Substring(0, 1));
-            switch (sender)
-            {
-                case 0:
-                    p4_1_player1_ballon.Invoke(new MethodInvoker(delegate { p4_1_player1_ballon.Text = msg.Substring(1); }));
-                    p4_1_player1_ballon.Invoke(new MethodInvoker(delegate { p4_1_player1_ballon.Visible = true; }));
-                    p4_player1_ballon.Invoke(new MethodInvoker(delegate { p4_player1_ballon.Text = msg.Substring(1); }));
-                    p4_player1_ballon.Invoke(new MethodInvoker(delegate { p4_player1_ballon.Visible = true; }));
-
-                    break;
-                case 1:
-                    p4_1_player2_ballon.Invoke(new MethodInvoker(delegate { p4_1_player2_ballon.Text = msg.Substring(1); }));
-                    p4_1_player2_ballon.Invoke(new MethodInvoker(delegate { p4_1_player2_ballon.Visible = true; }));
-                    p4_player2_ballon.Invoke(new MethodInvoker(delegate { p4_player2_ballon.Text = msg.Substring(1); }));
-                    p4_player2_ballon.Invoke(new MethodInvoker(delegate { p4_player2_ballon.Visible = true; }));
-
-                    break;
-                case 2:
-                    p4_1_player3_ballon.Invoke(new MethodInvoker(delegate { p4_1_player3_ballon.Text = msg.Substring(1); }));
-                    p4_1_player3_ballon.Invoke(new MethodInvoker(delegate { p4_1_player3_ballon.Visible = true; }));
-                    p4_player3_ballon.Invoke(new MethodInvoker(delegate { p4_player3_ballon.Text = msg.Substring(1); }));
-                    p4_player3_ballon.Invoke(new MethodInvoker(delegate { p4_player3_ballon.Visible = true; }));
-
-                    break;
-                case 3:
-                    p4_1_player4_ballon.Invoke(new MethodInvoker(delegate { p4_1_player4_ballon.Text = msg.Substring(1); }));
-                    p4_1_player4_ballon.Invoke(new MethodInvoker(delegate { p4_1_player4_ballon.Visible = true; }));
-                    p4_player4_ballon.Invoke(new MethodInvoker(delegate { p4_player4_ballon.Text = msg.Substring(1); }));
-                    p4_player4_ballon.Invoke(new MethodInvoker(delegate { p4_player4_ballon.Visible = true; }));
-
-                    break;
-                case 4:
-                    p4_1_player5_ballon.Invoke(new MethodInvoker(delegate { p4_1_player5_ballon.Text = msg.Substring(1); }));
-                    p4_1_player5_ballon.Invoke(new MethodInvoker(delegate { p4_1_player5_ballon.Visible = true; }));
-                    p4_player5_ballon.Invoke(new MethodInvoker(delegate { p4_player5_ballon.Text = msg.Substring(1); }));
-                    p4_player5_ballon.Invoke(new MethodInvoker(delegate { p4_player5_ballon.Visible = true; }));
-                    break;
-            }
-        }
-
-
-        /// <summary>
-        /// 강제 퇴장 기능
-        /// </summary>
-        public override void Kicked()
-        {
-            p3_title_label.Visible = false;
-            p3_people_label.Visible = false;
-            p3_people_tbx.Visible = false;
-            p3_create_btn.Visible = false;
-            p3_roomname_label.Visible = false;
-            p3_roomname_tbx.Visible = false;
-            backPanel();
-            ShowMessageBox("강제 퇴장당함", "Room Out", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-
         #endregion
+
+        //클라이언트에서 리퀘스트를 보내도 해당 요청을 처리하기 전에 서버에서 소켓 연결이 끊겨서 예외 처리로 넘어가게 됨.
+        //그래서 여기서 처리하는 대신 서버 예외처리 하는 부분에서 처리하도록 바꿨어요
+        /*
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            client.RequestExitGame();
+        }
+        */
+
     }
 }
