@@ -847,7 +847,7 @@ namespace client
         //테이블 내 입장하기 버튼 클릭 시
         private void p3_dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if(e.RowIndex != -1)
+            if(e.RowIndex != -1)    // dgv 비었을 때 헤더 클릭 오류 해결
             {
                 string rName = p3_dataGridView1.Rows[e.RowIndex].Cells[0].Value.ToString();
                 roomname = rName;
@@ -1273,7 +1273,7 @@ namespace client
             p4_1_player_change();
             client.RequestPlayerList(roomname);
         }
-
+        
         //대기화면 채팅, 게임 질의응답 
         public override void RoomChat(List<string> chatList)
         {
@@ -2068,7 +2068,7 @@ namespace client
         /// </summary>
         private void p8_friend_dgv_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex != -1)
+            if (e.RowIndex != -1) // dgv 비었을 때 헤더 클릭 오류 해결
             {
                 if (e.ColumnIndex == p8_dgv_column3.Index)
                 {
@@ -2218,6 +2218,7 @@ namespace client
             Changing();
             // RequestWordSelect() 을 보낼 수 있는 버튼 필요 -> send 버튼으로 지정
             //panel5_Owner.Visible = true;
+            p5_message_tbx.Invoke(new MethodInvoker(delegate { p5_message_tbx.Text = ""; }));
             panel5_Owner.Invoke(new MethodInvoker(delegate { panel5_Owner.Visible = true; }));
             p6_2_solution_label.Invoke(new MethodInvoker(delegate { p6_2_solution_label.Text = "입력 중..."; }));
         }
