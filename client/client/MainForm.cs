@@ -1062,15 +1062,15 @@ namespace client
             //프사 초기화
             p4_1_player1_img.Invoke(new MethodInvoker(delegate { p4_1_player1_img.Visible = false; }));
             p4_1_player2_img.Invoke(new MethodInvoker(delegate { p4_1_player2_img.Visible = false; }));
-            //p4_1_player3_img.Invoke(new MethodInvoker(delegate { p4_1_player3_img.Visible = false; }));
-            //p4_1_player4_img.Invoke(new MethodInvoker(delegate { p4_1_player4_img.Visible = false; }));
-            //p4_1_player5_img.Invoke(new MethodInvoker(delegate { p4_1_player5_img.Visible = false; }));
+            p4_1_player3_img.Invoke(new MethodInvoker(delegate { p4_1_player3_img.Visible = false; }));
+            p4_1_player4_img.Invoke(new MethodInvoker(delegate { p4_1_player4_img.Visible = false; }));
+            p4_1_player5_img.Invoke(new MethodInvoker(delegate { p4_1_player5_img.Visible = false; }));
 
             p4_player1_img.Invoke(new MethodInvoker(delegate { p4_player1_img.Visible = false; }));
             p4_player2_img.Invoke(new MethodInvoker(delegate { p4_player2_img.Visible = false; }));
-            //p4_player3_img.Invoke(new MethodInvoker(delegate { p4_1_player3_img.Visible = false; }));
-            //p4_player4_img.Invoke(new MethodInvoker(delegate { p4_1_player4_img.Visible = false; }));
-            //p4_player5_img.Invoke(new MethodInvoker(delegate { p4_1_player5_img.Visible = false; }));
+            p4_player3_img.Invoke(new MethodInvoker(delegate { p4_player3_img.Visible = false; }));
+            p4_player4_img.Invoke(new MethodInvoker(delegate { p4_player4_img.Visible = false; }));
+            p4_player5_img.Invoke(new MethodInvoker(delegate { p4_player5_img.Visible = false; }));
 
 
             // player2  
