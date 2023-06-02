@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 
 namespace client
 {
@@ -168,7 +169,15 @@ namespace client
         ///  RequestPlayerList 호출 후 도착하는 응답. 현재 방에 존재하는 플레이어의 username 목록을 playerList로 전달한다. 
         ///  해당 방에 플레이어가 진입할때 기존에 있던 다른 플레이어들에게 자동으로 호출되어 방의 인원 변경을 자동으로 반영하게 함. override 필요
         /// </summary>
-        public virtual void PlayerList(List<string> playerList)
+        public virtual void PlayerList(List<string> playerList, List<Image> imageList)
+        {
+
+        }
+
+        /// <summary>
+        ///  RequestGetProfileImage 호출 후 도착하는 응답. 현재 자신의 프로필 이미지를 전달한다. override 필요
+        /// </summary>
+        public virtual void GetProfileImage(Image image)
         {
 
         }
@@ -294,7 +303,7 @@ namespace client
         /// </summary>
         protected void TryConnectServer(string serverIP)
         {
-            if (client == null) client = new Client(this, serverIP);
+            if (client == null) client = new Client(this);
 
             if (client.Activate)
             {
@@ -302,8 +311,52 @@ namespace client
             }
             else
             {
-                client.ServerIP = IPAddress.Parse(serverIP);
-                client.Start();
+                ConnectServerResult(client.Start(IPAddress.Parse(serverIP)));
+            }
+        }
+
+        protected void TryConnectServer()
+        {
+            client = new Client(this);
+            List<IPAddress> ipList = LoadAllServerIp("MyServerIP.txt");
+
+            if(ipList.Count > 0){
+                for(int i=0; i<ipList.Count; i++){
+                    client.ServerIP = ipList[i];
+                    if(client.Start(ipList[i])){
+                        client.parentForm.ConnectServerResult(true);
+                        return;
+                    }
+                }
+            }
+            client.parentForm.ConnectServerResult(false);
+        }
+
+        private List<IPAddress> LoadAllServerIp(string filePath)
+        {
+            List<IPAddress> ipList = new List<IPAddress>();
+
+            if (!File.Exists(filePath))
+            {
+                File.WriteAllText(filePath, "고정 서버 ip 주소를 입력. 우선순위에 따라 위에서부터 작성\n127.0.0.1");
+            }
+            try
+            {
+                string[] lines = File.ReadAllLines(filePath);
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    if (IPAddress.TryParse(lines[i], out IPAddress ip))
+                    {
+                        ipList.Add(ip);
+                    }
+                }
+
+                return ipList;
+            }
+            catch
+            {
+                return ipList;
             }
         }
 

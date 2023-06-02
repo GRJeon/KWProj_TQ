@@ -13,6 +13,8 @@ using System.Data.SQLite;
 using System.Collections;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace ServerProgram
 {
@@ -49,7 +51,7 @@ namespace ServerProgram
         public void update_db()
         {
             SQLiteConnection conn;
-            conn = new SQLiteConnection("Data Source=login_info.db");
+            conn = new SQLiteConnection("Data Source=user_info.db");
             conn.Open();
             string query = "select wins from idpw where ID='" + username + "'";
             SQLiteCommand cmd= new SQLiteCommand(query, conn);
@@ -91,6 +93,7 @@ namespace ServerProgram
         //클라이언트에 메세지 전송
         public void SendResponse(string header, string content)
         {
+            if (content == null) content = string.Empty;
             writer.WriteLine(header + "|" + content);
         }
 
@@ -120,9 +123,12 @@ namespace ServerProgram
         private int portCount = 1;
         private IPAddress serverIP = IPAddress.Parse("127.0.0.1"); // ip는 입력 받아 저장
 
-        public MainServer(ServerForm parentForm)
+        private List<Image> basicImageList;
+
+        public MainServer(ServerForm parentForm, List<Image> imageList)
         {
             this.parentForm = parentForm;
+            this.basicImageList = imageList;
 
             //서버 아이피 저장 및 로그로 출력
             string myIPString = GetMyIP();
@@ -139,6 +145,7 @@ namespace ServerProgram
 
             LoadLoginData();
             LoadFriendData();
+            LoadProfileImage();
         }
 
         void lobby_server()//스레드 내에서 새로운 클라이언트를 대기, 클라이언트가 접속하면 새 포트와 방 번호를 할당
@@ -348,6 +355,15 @@ namespace ServerProgram
                     }else if (header.Equals("GETIMG"))
                     {
                         Img_work(server);
+                    }else if (header.Equals("SETPROFILEIMAGE"))
+                    {
+                        AddProfileImage(server, content);
+                    }else if (header.Equals("GETPROFILEIMAGE"))
+                    {
+                        server.SendResponse("GETPROFILEIMAGE", GetProfileImageString(server));
+                    }else if (header.Equals("REMOVEPROFILEIMAGE"))
+                    {
+                        RemoveProfileImage(server);
                     }
                     //알 수 없는 header일때
                     else
@@ -363,6 +379,28 @@ namespace ServerProgram
                 parentForm.PrintLog("disconnect client | ip : " + server.clientIP.ToString() + " | room : " + server.roomnum().ToString());
                 servers.Remove(server);
             }
+        }
+
+        public string GetBasicImage(int index = 0)
+        {
+            string imgstring = string.Empty;
+            try
+            {
+                MemoryStream ms = new MemoryStream();
+
+                //Image image = new Bitmap(basicImageList[index], new Size(100, 160));
+                Image image = basicImageList[index];
+                image.Save(ms, ImageFormat.Jpeg);
+
+                byte[] imgbyte = ms.ToArray();
+                imgstring = Convert.ToBase64String(imgbyte);
+            }
+            catch
+            {
+                parentForm.PrintLog("ERROR : FAIL LOAD BASIC IMAGE");
+            }
+
+            return imgstring;
         }
 
         //실행하는 컴퓨터의 ip 주소를 반환
@@ -402,9 +440,9 @@ namespace ServerProgram
         private void LoadLoginData()
         {
             //파일에서 아이디-패스워드 데이터 읽어오기. 
-            if (!System.IO.File.Exists("login_info.db"))
-                SQLiteConnection.CreateFile("login_info.db");
-            conn = new SQLiteConnection("Data Source=login_info.db");
+            if (!System.IO.File.Exists("user_info.db"))
+                SQLiteConnection.CreateFile("user_info.db");
+            conn = new SQLiteConnection("Data Source=user_info.db");
             conn.Open();
             string query = "create table if not exists idpw (ID varchar(20), pw varchar(20)" +
                 ", wins numeric(5,0), primary key (ID))";
@@ -453,7 +491,7 @@ namespace ServerProgram
                 parentForm.PrintLog("create new account : " + username + ", " + password);
                 loginData.Add(username, password);
 
-                conn = new SQLiteConnection("Data Source=login_info.db");
+                conn = new SQLiteConnection("Data Source=user_info.db");
                 conn.Open();
                 string query = "insert into idpw (ID,pw,wins) values ('" +
                     username + "','" + password + "','0')";
@@ -475,6 +513,76 @@ namespace ServerProgram
                     return;
                 }
             });
+        }
+        #endregion
+
+        #region 이미지 기능
+        private List<Tuple<string, string>> profileImgList;
+        
+        private void LoadProfileImage()
+        {
+            profileImgList = new List<Tuple<string, string>>();
+ 
+            if (!System.IO.File.Exists("user_info.db"))
+                SQLiteConnection.CreateFile("user_info.db");
+            conn = new SQLiteConnection("Data Source=user_info.db");
+            conn.Open();
+            string query = "create table if not exists profileImage (username varchar(20), profile varchar" +
+                ", primary key (username))";
+
+            SQLiteCommand cmd = new SQLiteCommand(query, conn);
+            cmd.ExecuteNonQuery();
+
+            query = "select * from profileImage";
+            cmd = new SQLiteCommand(query, conn);
+            SQLiteDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                profileImgList.Add(new Tuple<string, string>(reader["username"].ToString(), reader["profile"].ToString()));
+            }
+            reader.Close();
+        }
+
+        private bool AddProfileImage(Server server, string byteString)
+        {
+            if (server == null) return false;
+            if (profileImgList.FindIndex(user => user.Item1.Equals(server.username)) != -1)
+            {
+                RemoveProfileImage(server);
+            }
+
+            profileImgList.Add(new Tuple<string, string>(server.username, byteString));
+
+            conn = new SQLiteConnection("Data Source=user_info.db");
+            conn.Open();
+            string query = "insert into profileImage (username,profile) values ('" +
+                server.username + "','" + byteString + "')";
+            SQLiteCommand cmd = new SQLiteCommand(query, conn);
+            int result = cmd.ExecuteNonQuery();
+
+            return true;
+        }
+
+        private string GetProfileImageString(Server server)
+        {
+            Tuple<string, string> findItem = profileImgList.Find(user => user.Item1.Equals(server.username));
+            if (findItem == null) return null;
+            else return findItem.Item2;
+        }
+
+        private void RemoveProfileImage(Server server)
+        {
+            Tuple<string, string> findItem = profileImgList.Find(user => user.Item1.Equals(server.username));
+            if(findItem == null) return;
+
+            conn = new SQLiteConnection("Data Source=user_info.db");
+            conn.Open();
+
+            string query = "DELETE FROM profileImage WHERE username='" + findItem.Item1 + "'";
+            SQLiteCommand cmd = new SQLiteCommand(query, conn);
+            int result = cmd.ExecuteNonQuery();
+
+            profileImgList.Remove(findItem);
         }
         #endregion
 
@@ -526,7 +634,7 @@ namespace ServerProgram
             {
                 Tuple<string, string> findItem = friendshipList[pos];
 
-                conn = new SQLiteConnection("Data Source=friend_info.db");
+                conn = new SQLiteConnection("Data Source=user_info.db");
                 conn.Open();
 
                 string query = "DELETE FROM friendship WHERE username1='" + findItem.Item1 + "' AND username2='" + findItem.Item2 + "'";
@@ -584,7 +692,7 @@ namespace ServerProgram
             {
                 friendshipList.Add(new Tuple<string, string>(server1.username, server2.username));
 
-                conn = new SQLiteConnection("Data Source=friend_info.db");
+                conn = new SQLiteConnection("Data Source=user_info.db");
                 conn.Open();
                 string query = "insert into friendship (username1,username2) values ('" +
                     server1.username + "','" + server2.username + "')";
@@ -606,9 +714,9 @@ namespace ServerProgram
             friendshipList = new List<Tuple<string, string>>();
 
             //파일에서 아이디-패스워드 데이터 읽어오기. 
-            if (!System.IO.File.Exists("friend_info.db"))
-                SQLiteConnection.CreateFile("friend_info.db");
-            conn = new SQLiteConnection("Data Source=friend_info.db");
+            if (!System.IO.File.Exists("user_info.db"))
+                SQLiteConnection.CreateFile("user_info.db");
+            conn = new SQLiteConnection("Data Source=user_info.db");
             conn.Open();
             string query = "create table if not exists friendship (username1 varchar(20), username2 varchar(20)" +
                 ", primary key (username1,username2))";
@@ -776,7 +884,12 @@ namespace ServerProgram
             string playerListString = string.Empty;
             if (room != null)
             {
-                room.players.ForEach(p => playerListString += p.username + ",");
+                room.players.ForEach(p => {
+                    string userProfileImage = GetProfileImageString(p);
+                    if (userProfileImage == null) userProfileImage = GetBasicImage();
+
+                    playerListString += p.username + ":" + userProfileImage + ",";
+                    });
 
                 if (playerListString.Length > 0) playerListString = playerListString.Substring(0, playerListString.Length - 1);
             }
@@ -1227,7 +1340,7 @@ namespace ServerProgram
         #region 기타
         private void Parse_rank(Server server)
         {
-            conn = new SQLiteConnection("Data Source=login_info.db");
+            conn = new SQLiteConnection("Data Source=user_info.db");
             conn.Open();
             string query = "select ID,wins from idpw order by wins desc limit 15";
             SQLiteCommand cmd=new SQLiteCommand(query, conn);

@@ -28,9 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnStart = new System.Windows.Forms.Button();
             this.logTB = new System.Windows.Forms.TextBox();
+            this.basicImageList = new System.Windows.Forms.ImageList(this.components);
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -65,6 +68,12 @@
             this.logTB.TabIndex = 1;
             this.logTB.WordWrap = false;
             // 
+            // basicImageList
+            // 
+            this.basicImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("basicImageList.ImageStream")));
+            this.basicImageList.TransparentColor = System.Drawing.Color.Transparent;
+            this.basicImageList.Images.SetKeyName(0, "basicImage.jpg");
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
@@ -86,6 +95,7 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.TextBox logTB;
+        private System.Windows.Forms.ImageList basicImageList;
     }
 }
 

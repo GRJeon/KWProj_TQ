@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -95,6 +96,22 @@ namespace client
         public void RequestPlayerList(string roomName)
         {
             SendRequest("PLAYERLIST", roomName);
+        }
+
+        public void RequestSetProfileImage(Image myImage)
+        {
+            string byteString = Img_to_string(myImage);
+            SendRequest("SETPROFILEIMAGE", byteString);
+        }
+
+        public void RequestGetProfileImage()
+        {
+            SendRequest("GETPROFILEIMAGE", username);
+        }
+
+        public void RequestRemoveProfileImage()
+        {
+            SendRequest("REMOVEPROFILEIMAGE", username);
         }
 
         public void RequestGameReady()

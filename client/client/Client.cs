@@ -22,17 +22,15 @@ namespace client
         private StreamWriter swriter;
         private NetworkStream sstream;
 
-        private ClientForm parentForm;
+        public ClientForm parentForm;
 
         public string username = "None";
         private bool activate = false;
         public bool Activate { get { return activate; } } //현재 클라이언트가 서버와 접속중인지
 
-        public Client(ClientForm parentForm, string serverIPString)
+        public Client(ClientForm parentForm)
         {
-            this.serverIP = IPAddress.Parse(serverIPString);
             this.parentForm = parentForm;
-
         }
 
         //실행하는 컴퓨터의 ip 주소를 반환
@@ -53,10 +51,12 @@ namespace client
         }
 
         //서버와 접속을 시작한다.
-        public void Start()
+        public bool Start(IPAddress newServerIp)
         {
             try
             {
+                serverIP = newServerIp;
+
                 //만약 입력된 IP가 127.0.0.1 이면 로컬 연결이므로 clientIP, serverIP 모두 127.0.0.1로
                 IPAddress clientIP = IPAddress.Parse("127.0.0.1");
                 if (!serverIP.ToString().Equals("127.0.0.1")) clientIP = IPAddress.Parse(GetMyIP());
@@ -81,14 +81,9 @@ namespace client
             }
             catch (Exception ex)
             {
-                //parentForm.ShowMessageBox("서버 연결 실패", "Fail", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
-                parentForm.ShowMessageBox(ex.Message, "Fail", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                activate = false;
             }
-            finally
-            {
-                //서버 연결 성공 여부를 전달
-                parentForm.ConnectServerResult(activate);
-            }
+            return activate;
         }
 
         //서버에 요청을 보낸다.
@@ -105,6 +100,15 @@ namespace client
                 string msg = sreader.ReadLine();
                 ResponseProcess(msg);
             }
+        }
+
+        private string Img_to_string(Image image)
+        {
+            MemoryStream ms = new MemoryStream();
+            image.Save(ms, image.RawFormat);
+            byte[] imgbyte = ms.ToArray();
+            string imgstring = Convert.ToBase64String(imgbyte);
+            return imgstring;
         }
 
         //Server - chat_server에서 보낸 응답을 처리
@@ -186,8 +190,23 @@ namespace client
                 // 받아 온 content가 비어있지 않다면, 접속된 유저 이름 가져옴
                 if (string.IsNullOrEmpty(content) == false)
                 {
-                    string[] playerArr = content.Split(',');
-                    parentForm.PlayerList(playerArr.ToList());
+                    string[] lines = content.Split(',');
+                    List<string> playerList = new List<string>();
+                    List<Image> imageList = new List<Image>();
+
+                    for(int i=0; i< lines.Length; i++)
+                    {
+                        string[] line = lines[i].Split(':');
+
+                        playerList.Add(line[0]);
+                        byte[] imgbyte = Convert.FromBase64String(line[1]);
+                        using (MemoryStream ms = new MemoryStream(imgbyte))
+                        {
+                            Image image = Image.FromStream(ms);
+                            imageList.Add(image);
+                        }
+                    }
+                    parentForm.PlayerList(playerList, imageList);
                 }
             }
             else if (header.Equals("SENDFRIENDREQUEST"))

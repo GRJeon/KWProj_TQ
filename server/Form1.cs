@@ -26,7 +26,13 @@ namespace ServerProgram
 
         private void StartServer()
         {
-            mainServer = new MainServer(this);
+            List<Image> imageList = new List<Image>();
+
+            for(int i=0; i<basicImageList.Images.Count; i++)
+            {
+                imageList.Add(basicImageList.Images[i]);
+            }
+            mainServer = new MainServer(this, imageList);
             mainServer.server_start();
             PrintLog("서버 시작");
         }
