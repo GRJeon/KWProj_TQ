@@ -1745,7 +1745,7 @@ namespace client
                 case 4:
                     player5_img = img;
                     p4_player5_img.Invoke(new MethodInvoker(delegate { p4_player2_img.Image = img; }));
-                    p4_1_player5_img.Invoke(new MethodInvoker(delegate { p4_1_player2_img.Image = img; }));
+                    p4_1_player5_img.Invoke(new MethodInvoker(delegate { p4_1_player1_img.Image = img; }));
                     break;
             }
         }
