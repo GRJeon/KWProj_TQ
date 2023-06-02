@@ -1243,6 +1243,12 @@ namespace client
             }
             if (cnt > 2)
             {
+                //프사
+                p4_1_player3_img.Invoke(new MethodInvoker(delegate { p4_1_player3_img.Visible = true; }));
+                p4_1_player3_img.Invoke(new MethodInvoker(delegate { p4_1_player3_img.Image = imageList[2]; }));
+                p4_player3_img.Invoke(new MethodInvoker(delegate { p4_player3_img.Visible = true; }));
+                p4_player3_img.Invoke(new MethodInvoker(delegate { p4_player3_img.Image = imageList[2]; }));
+
                 p4_player3.Invoke(new MethodInvoker(delegate { p4_player3.Text = playerList[2]; }));
                 p4_player3.Invoke(new MethodInvoker(delegate { p4_player3.BackColor = Color.LightSkyBlue; }));
                 p4_w_state_player3.Invoke(new MethodInvoker(delegate { p4_w_state_player3.Visible = true; }));
@@ -1273,6 +1279,12 @@ namespace client
             }
             if (cnt > 3)
             {
+                //프사
+                p4_1_player4_img.Invoke(new MethodInvoker(delegate { p4_1_player4_img.Visible = true; }));
+                p4_1_player4_img.Invoke(new MethodInvoker(delegate { p4_1_player4_img.Image = imageList[3]; }));
+                p4_player4_img.Invoke(new MethodInvoker(delegate { p4_player4_img.Visible = true; }));
+                p4_player4_img.Invoke(new MethodInvoker(delegate { p4_player4_img.Image = imageList[3]; }));
+
                 p4_player4.Invoke(new MethodInvoker(delegate { p4_player4.Text = playerList[3]; }));
                 p4_player4.Invoke(new MethodInvoker(delegate { p4_player4.BackColor = Color.LightSkyBlue; }));
                 p4_w_state_player4.Invoke(new MethodInvoker(delegate { p4_w_state_player4.Visible = true; }));
@@ -1303,6 +1315,12 @@ namespace client
             }
             if (cnt > 4)
             {
+                //프사
+                p4_1_player5_img.Invoke(new MethodInvoker(delegate { p4_1_player5_img.Visible = true; }));
+                p4_1_player5_img.Invoke(new MethodInvoker(delegate { p4_1_player5_img.Image = imageList[4]; }));
+                p4_player5_img.Invoke(new MethodInvoker(delegate { p4_player5_img.Visible = true; }));
+                p4_player5_img.Invoke(new MethodInvoker(delegate { p4_player5_img.Image = imageList[4]; }));
+
                 p4_player5.Invoke(new MethodInvoker(delegate { p4_player5.Text = playerList[4]; }));
                 p4_player5.Invoke(new MethodInvoker(delegate { p4_player5.BackColor = Color.LightSkyBlue; }));
                 p4_w_state_player5.Invoke(new MethodInvoker(delegate { p4_w_state_player5.Visible = true; }));
@@ -1699,28 +1717,35 @@ namespace client
                 return img;
             }
         }
-        public override void GetImg(Image img,int n)
+        public override void GetImg(Image img, int n)
         {
-           
+
             switch (n)
-            {  
+            {
                 case 0:
                     player1_img = img;
+                    p4_player1_img.Invoke(new MethodInvoker(delegate { p4_player1_img.Image = img; }));
                     p4_1_player1_img.Invoke(new MethodInvoker(delegate { p4_1_player1_img.Image = img; }));
-                   
                     break;
                 case 1:
                     player2_img = img;
                     p4_player2_img.Invoke(new MethodInvoker(delegate { p4_player2_img.Image = img; }));
+                    p4_1_player2_img.Invoke(new MethodInvoker(delegate { p4_1_player2_img.Image = img; }));
                     break;
                 case 2:
                     player3_img = img;
+                    p4_player3_img.Invoke(new MethodInvoker(delegate { p4_player3_img.Image = img; }));
+                    p4_1_player3_img.Invoke(new MethodInvoker(delegate { p4_1_player3_img.Image = img; }));
                     break;
                 case 3:
                     player4_img = img;
+                    p4_player4_img.Invoke(new MethodInvoker(delegate { p4_player4_img.Image = img; }));
+                    p4_1_player4_img.Invoke(new MethodInvoker(delegate { p4_1_player4_img.Image = img; }));
                     break;
                 case 4:
                     player5_img = img;
+                    p4_player5_img.Invoke(new MethodInvoker(delegate { p4_player2_img.Image = img; }));
+                    p4_1_player5_img.Invoke(new MethodInvoker(delegate { p4_1_player2_img.Image = img; }));
                     break;
             }
         }
