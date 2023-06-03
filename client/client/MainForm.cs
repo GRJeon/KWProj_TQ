@@ -2528,6 +2528,10 @@ namespace client
                 buzzer_on = false;
                 timer1.Stop();
             }
+            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = false; }));
+            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = false; }));
+            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.ReadOnly = true; }));
+            p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Text = "( 질문 순서가 아닙니다. )"; }));
         }
 
         private void p6_answer_tbx_KeyPress(object sender, KeyPressEventArgs e)
@@ -2659,9 +2663,8 @@ namespace client
             {
                 p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.Text = ""; }));
                 p6_answer_tbx.Invoke(new MethodInvoker(delegate { p6_answer_tbx.ReadOnly = false; }));  // 입력 받기 가능
-
-                p6_answer_tbx.ForeColor = Color.DodgerBlue;
                 turn_cnt++;
+                p6_answer_tbx.ForeColor = Color.DodgerBlue;
             }
             else
             {   // 질문 20번 넘었을 때
@@ -2686,11 +2689,14 @@ namespace client
             if (buzzer_on)
             {  // 부저 -> 정답 입력
                 client.RequestGuessAnswer(p6_answer_tbx.Text);
-                buzzer_on=false;
+                buzzer_on = false;
                 timer1.Stop();
             }
-            else            // 일반 질문 입력
+            else
+            {
+                // 일반 질문 입력
                 client.RequestSendQuestion("[ " + p1_username_tbx.Text + " ] " + p6_answer_tbx.Text);
+            }
             p6_answer_tbx.Text = "";
         }
 

@@ -1213,7 +1213,7 @@ namespace ServerProgram
                 }
             }
             if (room == null) return;
-            room.Plus_total_q();
+            //room.Plus_total_q();
             List<Server> qList = room.GetQuestionerList();
             for (int i = 0; i < qList.Count; i++)
             {
