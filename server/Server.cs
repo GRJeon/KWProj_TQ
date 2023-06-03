@@ -1160,6 +1160,7 @@ namespace ServerProgram
                 }
             }
             if (room == null) return;
+            room.Plus_total_q();
             RoomChat(room.Get_total_q().ToString() + "번째 질문 : " + question, server);
             //출제자만 채팅 활성화
             room.GetPresenter().SendResponse("GAMESCREEN", "PRESENTERWANSWER");

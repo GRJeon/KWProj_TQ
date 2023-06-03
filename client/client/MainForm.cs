@@ -2528,8 +2528,6 @@ namespace client
                 buzzer_on = false;
                 timer1.Stop();
             }
-            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = false; }));
-            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = false; }));
             p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.ReadOnly = true; }));
             p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Text = "( 질문 순서가 아닙니다. )"; }));
         }
@@ -2619,6 +2617,9 @@ namespace client
 
         private void panel6_2_Answer_Wait_VisibleChanged(object sender, EventArgs e)
         {
+            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = false; }));
+            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = false; }));
+
             this.ActiveControl = p6_2_answer_tbx;       // 커서 포커싱 설정
             p6_2_QA_tbx.Enabled = false;                // 채팅창 커서 입력 no
         }
@@ -2679,6 +2680,9 @@ namespace client
             p6_solution_label.Invoke(new MethodInvoker(delegate { p6_solution_label.Text = "? ? ?"; }));
             p6_answer_tbx.Text = "( 출제자가 답을 입력 중입니다. )";
             p6_answer_tbx.ReadOnly = true;
+
+            p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = false; }));
+            p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = false; }));
 
             this.ActiveControl = p6_answer_tbx; // 커서 포커싱 설정
             p6_QA_tbx.Enabled = false;
