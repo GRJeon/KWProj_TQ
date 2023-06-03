@@ -2543,7 +2543,7 @@ namespace client
                     timer1.Stop();
                 }
                 else            // 일반 질문 입력
-                    client.RequestSendQuestion("[ " + turn_cnt + " ] " + p1_username_tbx.Text + " : " + p6_answer_tbx.Text);
+                    client.RequestSendQuestion("[ " + p1_username_tbx.Text + " ] " + " : " + p6_answer_tbx.Text);
                 p6_answer_tbx.Text = "";
             }
 
