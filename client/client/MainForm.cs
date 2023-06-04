@@ -2074,6 +2074,13 @@ namespace client
                     ans = p6_2_answer_tbx.Text;
                 client.RequestGuessAnswer(ans);  // 정답인지 확인
                 //답 읽어오기
+
+                // 타이머 안 보이게
+                p6_timer_label.Invoke(new MethodInvoker(delegate { p6_timer_label.Visible = false; }));
+                p6_2_timer_label.Invoke(new MethodInvoker(delegate { p6_2_timer_label.Visible = false; }));
+            
+                p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.ReadOnly = true; }));
+                p6_2_answer_tbx.Invoke(new MethodInvoker(delegate { p6_2_answer_tbx.Text = "( 질문 순서가 아닙니다. )"; }));
             }
             
         }
@@ -2560,7 +2567,7 @@ namespace client
             if (e.KeyChar == Convert.ToChar(Keys.Enter))
             {
                 e.Handled = true;
-                p5_input_label.Invoke(new MethodInvoker(delegate { p5_input_label.Text = p5_message_tbx.Text; }));
+                //p5_input_label.Invoke(new MethodInvoker(delegate { p5_input_label.Text = p5_message_tbx.Text; }));
                 client.RequestWordSelect(p5_input_label.Text);
             }
         }
